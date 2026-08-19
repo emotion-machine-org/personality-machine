@@ -12,7 +12,7 @@ import React, { useState } from 'react';
   import { usePipecatSession } from '../../hooks/usePipecatSession';
   import { theme } from '@/theme';
 
-  const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8101';
+  const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8100';
 
   export default function ChatScreen() {
     const { isPlaying, togglePlay, config, startSession } = usePipecatSession();

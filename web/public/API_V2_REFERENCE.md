@@ -1,6 +1,6 @@
-# Emotion Machine API v2 Reference
+# Personality Machine API v2 Reference
 
-Base URL: `https://api.emotionmachine.ai/v2`
+Base URL: `https://api.emotionmachine.ai/v2` (hosted) or `http://localhost:8100/v2` (self-hosted)
 
 ---
 
@@ -336,10 +336,10 @@ All API calls require an API key. Get one from the Emotion Machine dashboard.
 from emotion_machine import EmotionMachine
 
 # Via constructor
-em = EmotionMachine(api_key="em_live_...")
+em = EmotionMachine(api_key="emk_live_a1b2c3d4e5f6....")
 
 # Or via environment variable
-# export EM_API_KEY=em_live_...
+# export EM_API_KEY=emk_live_a1b2c3d4e5f6....
 em = EmotionMachine()
 ```
 
@@ -347,7 +347,7 @@ For REST calls without the SDK:
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v2/companions/{cid}/relationships/{uid}/messages" \
-  -H "Authorization: Bearer em_live_..." \
+  -H "Authorization: Bearer emk_live_a1b2c3d4e5f6...." \
   -H "Content-Type: application/json" \
   -d '{"content": "Hello!"}'
 ```
@@ -359,7 +359,7 @@ curl -X POST "https://api.emotionmachine.ai/v2/companions/{cid}/relationships/{u
 ```python
 from emotion_machine import EmotionMachine
 
-async with EmotionMachine(api_key="em_live_...") as em:
+async with EmotionMachine(api_key="emk_live_a1b2c3d4e5f6....") as em:
     rel = em.relationship("companion_id", "user_123")
     response = await rel.send("Hello!")
     print(response["message"]["content"])
@@ -1489,7 +1489,7 @@ Base URL: `https://api.emotionmachine.ai`
 All endpoints require authentication via Bearer token:
 
 ```bash
-Authorization: Bearer em_live_your_api_key
+Authorization: Bearer emk_live_a1b2c3d4e5f6.your_secret_here
 ```
 
 ---
@@ -2322,12 +2322,16 @@ PATCH /v2/sessions/{session_id}/state
 Content-Type: application/json
 
 {
-  "current_step": 3,
-  "notes": "User mentioned anxiety"
+  "changes": {
+    "current_step": 3,
+    "notes": "User mentioned anxiety"
+  }
 }
 ```
 
-**Response** `200 OK`
+The `changes` wrapper is required; its contents are merged into the session state.
+
+**Response** `200 OK` — returns the full session object (same shape as `GET /v2/sessions/{id}`).
 
 ---
 
@@ -2341,7 +2345,7 @@ GET /v2/relationships/{relationship_id}/inbox?limit=20&include_delivered=false
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| limit | int | 20 | Max messages to return |
+| limit | int | 50 | Max messages to return (1-100) |
 | include_delivered | boolean | false | Include already-delivered messages |
 
 **Response** `200 OK`
@@ -2351,13 +2355,15 @@ GET /v2/relationships/{relationship_id}/inbox?limit=20&include_delivered=false
   "messages": [
     {
       "id": "msg_123...",
+      "seq": 42,
       "content": "Good morning! How are you feeling today?",
       "source_behavior_key": "daily_checkin",
       "delivery_status": "pending",
       "created_at": "2024-01-15T09:00:00Z",
       "expires_at": "2024-01-16T09:00:00Z"
     }
-  ]
+  ],
+  "count": 1
 }
 ```
 
@@ -2378,7 +2384,8 @@ Content-Type: application/json
 
 ```json
 {
-  "acknowledged": 2
+  "acknowledged": 2,
+  "message_ids": ["msg_123...", "msg_456..."]
 }
 ```
 
@@ -2395,16 +2402,31 @@ GET /v2/companions/{companion_id}/behaviors
 **Response** `200 OK`
 
 ```json
-[
-  {
-    "key": "mood_tracker",
-    "name": "Mood Tracker",
-    "triggers": ["always"],
-    "priority": true,
-    "enabled": true,
-    "created_at": "2024-01-15T10:30:00Z"
-  }
-]
+{
+  "companion_id": "550e8400-...",
+  "behaviors": [
+    {
+      "link_id": "770e8400-...",
+      "companion_id": "550e8400-...",
+      "relationship_id": null,
+      "behavior_id": "880e8400-...",
+      "behavior_key": "mood_tracker",
+      "behavior_name": "mood_tracker",
+      "behavior_description": "Tracks user mood on every message",
+      "has_source_code": true,
+      "version": 1,
+      "triggers": ["always"],
+      "priority": true,
+      "isolated": false,
+      "enabled": true,
+      "classifier_eligible": true,
+      "classifier_hint": null,
+      "webhook_url": null,
+      "params": {}
+    }
+  ],
+  "total": 1
+}
 ```
 
 ---
@@ -2416,10 +2438,7 @@ POST /v2/companions/{companion_id}/behaviors
 Content-Type: application/json
 
 {
-  "key": "mood_tracker",
-  "name": "Mood Tracker",
-  "description": "Tracks user mood on every message",
-  "source_code": "async def execute(ctx):\n    if 'anxious' in ctx.message.lower():\n        ctx.profile.set('user.mood', 'anxious')\n        return 'User seems anxious. Be supportive.'\n    return None",
+  "behavior_key": "mood_tracker",
   "triggers": ["always"],
   "priority": true,
   "webhook_url": "https://yourapp.com/hooks/behavior",
@@ -2429,17 +2448,42 @@ Content-Type: application/json
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| key | string | Yes | Unique identifier |
-| name | string | No | Display name |
-| description | string | No | Description |
-| source_code | string | Yes | Python async function |
-| triggers | string[] | Yes | Trigger conditions |
-| priority | boolean | No | Sync (true) or async (false) |
-| isolated | boolean | No | Run in isolated container |
-| webhook_url | string | No | Webhook URL for notifications |
-| webhook_secret | string | No | HMAC secret for signatures |
+| behavior_key | string | Yes | Key of the behavior to link. If no behavior with this key exists in the project, an empty one is created. |
+| triggers | string[] | No | Trigger shorthand strings: `"always"`, `"every:5"`, `"idle:30"`, `"cron:0 0 * * 0"` |
+| priority | boolean | No | Sync (true, runs before the LLM and can inject prompt blocks) or async (false) |
+| isolated | boolean | No | Run in isolated container (slower, more secure) |
+| enabled | boolean | No | Default true |
+| classifier_eligible | boolean | No | Whether the intent classifier can select this behavior |
+| classifier_hint | string | No | Hint for the classifier |
+| webhook_url | string | No | URL called after the behavior completes |
+| webhook_secret | string | No | HMAC secret for webhook signatures |
+| params | object | No | Custom parameters passed to the behavior |
 
-**Response** `201 Created`
+Source code is **not** set here. After linking, upload the code with
+`PATCH /v2/companions/{companion_id}/behaviors/{behavior_key}/definition` (below).
+
+**Response** `201 Created` — returns the behavior link (same shape as list items above).
+
+---
+
+#### Update Behavior Definition (source code)
+
+```http
+PATCH /v2/companions/{companion_id}/behaviors/{behavior_key}/definition
+Content-Type: application/json
+
+{
+  "source_code": "async def execute(ctx):\n    if 'anxious' in ctx.message.lower():\n        ctx.profile.set('user.mood', 'anxious')\n        return 'User seems anxious. Be supportive.'\n    return None",
+  "description": "Tracks user mood on every message",
+  "dependencies": [],
+  "timeout_seconds": 60,
+  "block_network": false
+}
+```
+
+All fields optional. This updates the behavior itself (shared across links), not the link configuration.
+
+**Response** `200 OK`
 
 ---
 
@@ -2496,6 +2540,21 @@ Content-Type: application/json
   "status": "queued",
   "behavior_key": "mood_tracker"
 }
+```
+
+---
+
+#### Relationship-Scoped Behavior Overrides
+
+Companion-level links are defaults. A relationship can override them (same body
+shapes as the companion-scoped routes; an override has `relationship_id` set):
+
+```http
+GET    /v2/relationships/{relationship_id}/behaviors
+POST   /v2/relationships/{relationship_id}/behaviors
+GET    /v2/relationships/{relationship_id}/behaviors/{behavior_key}
+PATCH  /v2/relationships/{relationship_id}/behaviors/{behavior_key}
+DELETE /v2/relationships/{relationship_id}/behaviors/{behavior_key}
 ```
 
 ---
@@ -2624,10 +2683,17 @@ Content-Type: application/json
 #### Connect Voice WebSocket
 
 ```
-WS /v2/companions/{companion_id}/relationships/{user_id}/voice?token=...
+WS /v2/companions/{companion_id}/relationships/{user_id}/voice/connect?token=...
 ```
 
-Audio format: PCM Int16, mono. Sample rates vary by pipeline (see Section 3.6).
+Relationship-ID variants also exist:
+
+```
+POST /v2/relationships/{relationship_id}/voice/token
+WS   /v2/relationships/{relationship_id}/voice/connect?token=...
+```
+
+Audio format: PCM Int16, mono. Input 16kHz, output 24kHz (STT-LLM-TTS pipeline).
 
 ---
 
@@ -2635,25 +2701,22 @@ Audio format: PCM Int16, mono. Sample rates vary by pipeline (see Section 3.6).
 
 Knowledge endpoints use v1 prefix.
 
-#### Upload Knowledge Asset
+Related: `POST /v1/companions/{companion_id}/core-memories` seeds core memories for a
+relationship (`{"external_user_id": ..., "memories": [...]}`).
+
+#### Upload Knowledge Asset (dashboard API)
+
+Raw file uploads use the dashboard API with a Clerk session token, not a project API key:
 
 ```http
-POST /v1/companions/{companion_id}/knowledge-assets
+POST /api/companions/{companion_id}/knowledge-assets
 Content-Type: multipart/form-data
 
 file: <binary>
 ```
 
-**Response** `201 Created`
-
-```json
-{
-  "id": "asset_123...",
-  "filename": "document.pdf",
-  "status": "pending",
-  "created_at": "2024-01-15T10:30:00Z"
-}
-```
+With a project API key, use `POST /v1/companions/{id}/knowledge` (below) to ingest
+text or JSON content directly.
 
 ---
 
@@ -2952,17 +3015,15 @@ POST /v2/companions/{companion_id}/relationships/{user_id}/summaries/trigger
 
 ### 4.16 Error Responses
 
-All errors follow this format:
+REST errors use FastAPI's standard envelope:
 
 ```json
 {
-  "error": {
-    "code": "relationship_not_found",
-    "message": "Relationship not found",
-    "details": { "relationship_id": "rel_123" }
-  }
+  "detail": "Relationship 660e8400-... not found"
 }
 ```
+
+Validation errors (`422`) return FastAPI's standard `detail` array with the failing fields.
 
 #### HTTP Status Codes
 
@@ -2972,21 +3033,15 @@ All errors follow this format:
 | 401 | Unauthorized — Invalid or missing API key |
 | 404 | Not Found — Resource doesn't exist |
 | 409 | Conflict — Turn in progress, version mismatch, or idempotency conflict |
-| 429 | Rate Limited — Too many requests |
+| 422 | Unprocessable Entity — Request body failed validation |
 | 500 | Server Error — Internal error |
 
-#### Error Codes
+#### WebSocket Error Codes
+
+Structured error codes exist only on the WebSocket protocol (sent as `error` events):
 
 | Code | Description |
 |------|-------------|
-| `relationship_not_found` | Relationship doesn't exist |
-| `companion_not_found` | Companion doesn't exist |
-| `session_not_found` | Session doesn't exist |
-| `relationship_busy` | Turn already in progress (retry with backoff) |
 | `invalid_seq` | Requested `since_seq` not found |
-| `state_conflict` | Version mismatch (reload and retry) |
-| `idempotency_conflict` | Same key used with different content |
-| `invalid_user_id` | Invalid characters in user_id |
-| `context_mode_locked` | Cannot change context_mode after messages exist |
 
 ---

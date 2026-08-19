@@ -19,10 +19,10 @@ class LoadTestConfig:
 
     def __init__(self):
         # Base URL for the API
-        self.base_url = os.getenv("EM_BASE_URL", "https://api.emotionmachine.ai/api/")
+        self.base_url = os.getenv("EM_BASE_URL", "http://localhost:8100/api/")
 
         # Authentication - set via environment variable
-        # Example: export EM_API_KEY="em_live_..."
+        # Example: export EM_API_KEY="emk_live_..."
         self.api_key = os.getenv("EM_API_KEY", "")
 
         # Test companion and user IDs

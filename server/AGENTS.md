@@ -1,17 +1,18 @@
-# AGENTS.md - Emotion Machine Server
+# AGENTS.md - Personality Machine Server
 
 > Developer reference for AI assistants and engineers working on this codebase.
 
 ## Project Overview
 
-**Emotion Machine** is a FastAPI backend for building AI companions with:
-- Memory persistence (vector search via pgvector)
-- Knowledge management (document ingestion + retrieval)
+**Personality Machine** (Emotion Machine) is a FastAPI backend for building AI companions with:
+- Persistent relationships (per-user profile, memory, message history)
+- Memory persistence (Memory v2 scratchpad + pgvector search)
+- Knowledge management (document ingestion + retrieval via OpenAI vector stores)
 - Tool integration (OpenAPI spec indexing + execution)
-- Multi-modal conversations (voice WebSocket + text REST)
-- State management (per-user + per-conversation)
+- Behaviors (developer-defined automations executed in Modal sandboxes)
+- Multi-modal conversations (voice WebSocket + text REST/WS)
 
-**Stack**: Python 3.12+, FastAPI, AsyncPG, Supabase (PostgreSQL), Modal (serverless), Pipecat (voice)
+**Stack**: Python 3.12+, FastAPI, AsyncPG, PostgreSQL + pgvector, Modal (serverless), Pipecat (voice)
 
 ---
 
@@ -20,122 +21,81 @@
 ```
 server/
 ├── app/
-│   ├── main.py                    # FastAPI entry point, lifespan, CORS
-│   ├── auth.py                    # Clerk JWT + API key authentication
-│   ├── db.py                      # AsyncPG connection pool
-│   ├── constants.py               # Application constants
+│   ├── main.py                    # FastAPI entry point, lifespan, CORS, router registration
+│   ├── auth.py                    # Clerk JWT + project API key authentication
+│   ├── db.py                      # AsyncPG connection pool (JSONB codecs — see Key Patterns)
+│   ├── logging.py, tracing.py     # Logging + OpenTelemetry setup
 │   │
-│   ├── models/                    # Pydantic data models
-│   │   ├── user.py                # User model
-│   │   ├── companion.py           # Companion config, voices, memory
-│   │   ├── project.py             # Projects, API keys, knowledge assets
-│   │   ├── state.py               # User/conversation state
-│   │   ├── memory.py              # Memory data model
-│   │   ├── media.py               # Media/image models
-│   │   └── job.py                 # Background job model
+│   ├── models/                    # Pydantic data models (user, companion, project, state,
+│   │   └── v2/                    #   memory, media, job, share) + v2 API models
+│   ├── schemas/                   # Request/response schemas (knowledge, ...)
 │   │
-│   ├── repositories/              # Data access layer (DAL)
-│   │   ├── companion.py           # Companion CRUD
-│   │   ├── conversation.py        # Conversation & message persistence
-│   │   ├── project.py             # Project & knowledge operations
-│   │   ├── state_repository.py    # State persistence
-│   │   ├── memory.py              # Memory retrieval & search (pgvector)
-│   │   ├── tool_index_repository.py  # Tool spec indexing
-│   │   ├── tool_repository.py     # Tool runtime operations
-│   │   ├── job_repository.py      # Background job tracking
-│   │   ├── action_repository.py   # Action persistence
-│   │   ├── user.py                # User CRUD
-│   │   ├── share.py               # Share token operations
-│   │   └── project_secrets.py     # Encrypted project secrets
+│   ├── repositories/              # Data access layer: companion, conversation, project,
+│   │                              #   user, memory, memory_v2_repository, relationship_repository,
+│   │                              #   behavior_repository, session_repository, summary_repository,
+│   │                              #   state_repository, tool_*, job_repository, share, voice, ...
 │   │
-│   ├── routers/                   # API route handlers
-│   │   ├── api.py                 # Primary /api routes (authenticated)
-│   │   ├── client_api.py          # /v1 public SDK routes (API key auth)
-│   │   ├── sessions.py            # WebSocket voice sessions
+│   ├── routers/
+│   │   ├── api.py                 # Primary /api routes (Clerk auth, dashboard)
+│   │   ├── client_api.py          # /v1 public SDK routes (project API key auth)
+│   │   ├── v2/                    # /v2 API: relationships, messages, sessions, behaviors,
+│   │   │                          #   memory, summaries, inbox, websockets
+│   │   ├── voice/                 # Voice implementation: v1/v2 sessions, pipeline, providers,
+│   │   │                          #   twilio, fast_brain, openclaw (optional), workspace
+│   │   ├── sessions.py            # Deprecated shim → routers/voice/v1.py
 │   │   ├── conversations.py       # Text conversation endpoints
-│   │   ├── tools.py               # Tool spec management
-│   │   ├── analytics.py           # Analytics endpoints
-│   │   ├── memories.py            # Memory management
-│   │   ├── action_testing.py      # Action testing endpoints
-│   │   ├── context_engine_testing.py  # Context engine debug UI
-│   │   ├── companion_shares.py    # Share link management
-│   │   ├── public_companions.py   # Public companion listing
-│   │   └── public_shares.py       # Public share access
+│   │   ├── tools.py               # Tool spec management (/api/tools)
+│   │   ├── analytics.py           # Analytics + labeling jobs (/api/analytics)
+│   │   ├── memories.py            # Memory management (/api)
+│   │   ├── companion_shares.py, public_shares.py, public_companions.py
+│   │   ├── memory_v2_testing.py, context_engine_testing.py, dialogmachine.py  # debug UIs
+│   │   └── oauth_cli.py           # OAuth PKCE flow for CLI clients
 │   │
-│   ├── services/                  # Business logic layer
-│   │   ├── llm.py                 # LLM response generation
-│   │   ├── llm_resolver.py        # Provider resolution (OpenAI/OpenRouter)
-│   │   ├── openai_clients.py      # OpenAI async client factory
-│   │   ├── context_assembly.py    # System prompt + core memory composition
-│   │   ├── context_builder.py     # Message history assembly
-│   │   ├── knowledge_service.py   # Knowledge asset ingestion
-│   │   ├── knowledge_assets.py    # S3 asset storage
-│   │   ├── openai_vector_store.py # OpenAI vector store (embeddings)
-│   │   ├── memory_service.py      # Memory ingestion & retrieval
-│   │   ├── memory_runtime.py      # Memory retrieval heuristics
-│   │   ├── memory_prompts.py      # Memory system prompts
-│   │   ├── modal_gateway.py       # Modal serverless interface
-│   │   ├── cache_manager.py       # In-memory caching
-│   │   ├── api_keys.py            # API key generation/validation
-│   │   ├── encryption.py          # AES-256-GCM encryption
-│   │   ├── share_tokens.py        # Share token generation
-│   │   ├── voice_presets.py       # Voice configuration templates
-│   │   ├── media_assets.py        # Image upload & presigned URLs
-│   │   └── image_description.py   # Image description extraction
+│   ├── services/                  # Business logic: llm, llm_resolver, openai_clients,
+│   │                              #   message_processor, memory_service, memory_v2_service,
+│   │                              #   knowledge_service, knowledge_assets, openai_vector_store,
+│   │                              #   context_assembly, cache_manager, api_keys, encryption,
+│   │                              #   share_tokens, voice_presets, media_assets, intro_context, ...
 │   │
-│   ├── context/                   # Context engine (prompt orchestration)
-│   │   ├── orchestrator.py        # Main context orchestration
-│   │   ├── schemas.py             # Context schema definitions
-│   │   ├── resolved_config.py     # Runtime config resolution
-│   │   ├── action_runtime.py      # Action execution runtime
-│   │   ├── action_registry.py     # Action registration/discovery
-│   │   ├── action_sdk.py          # Action SDK for developers
-│   │   ├── action_context.py      # Action context builder
-│   │   ├── intent_classifier.py   # Intent classification for layers
-│   │   ├── memory_runtime.py      # Memory layer runtime
-│   │   ├── knowledge_runtime.py   # Knowledge layer runtime
-│   │   ├── tools_runtime.py       # Tools layer runtime
-│   │   ├── layers.py              # Layer abstraction
-│   │   ├── context_hydrator.py    # State hydration
-│   │   ├── post_turn_executor.py  # Post-turn effect execution
-│   │   ├── modal_action_executor.py  # Modal action execution
-│   │   ├── core_prompt_layer.py   # Core system prompt management
-│   │   ├── dependency_detector.py # Dependency resolution
-│   │   ├── chat_helpers.py        # Chat utility functions
-│   │   └── deploy_modal.py        # Modal deployment utilities
+│   ├── context/                   # Context engine: orchestrator, layers, behavior_runtime,
+│   │                              #   behavior_context, intent_classifier, memory_runtime,
+│   │                              #   memory_v2_layer, knowledge_runtime, tools_runtime,
+│   │                              #   core_prompt_layer, post_turn_executor,
+│   │                              #   modal_behavior_executor, chat_helpers, hydration/
+│   │
+│   ├── database/                  # SQLAlchemy engine/pool, middleware, tracking
 │   │
 │   ├── modals/                    # Modal serverless functions
-│   │   ├── workers/
-│   │   │   ├── tools.py           # Tool execution & indexing
-│   │   │   ├── memory_ingest.py   # Memory ingestion worker
-│   │   │   ├── summarize_conversation.py
-│   │   │   ├── redact_conversation.py
-│   │   │   └── label_conversations.py
-│   │   └── services/
-│   │       └── db_gateway.py      # Database gateway for Modal
+│   │   ├── workers/               # tools, memory_ingest, memory_v2_ingest,
+│   │   │                          #   summarize_conversation, redact_conversation,
+│   │   │                          #   label_conversations
+│   │   └── services/db_gateway.py # Database gateway ("em-db") for workers
 │   │
-│   ├── schemas/                   # Request/response schemas
-│   │   └── knowledge.py           # Knowledge ingestion schemas
+│   ├── prompts/                   # Prompt templates
+│   ├── utils/                     # Shared helpers (profile normalization, ...)
+│   ├── data/knowledge/            # Bundled knowledge fixtures
 │   │
-│   ├── supabase/
-│   │   └── migrations/            # 44+ SQL migrations
-│   │
-│   └── scripts/                   # Utility scripts
-│       ├── create_project_api_key.py
-│       ├── modal_deploy.py
-│       └── export_v1_openapi.py
+│   ├── supabase/migrations/       # 63 raw SQL migrations (applied in filename order)
+│   └── scripts/                   # migrate.sh / migrate_latest.sh / migrate_range.sh,
+│                                  #   modal_deploy.py, create_project_api_key.py,
+│                                  #   seed_onboarding_companion.py, clone_companion.py,
+│                                  #   export_v1_openapi.py, backfill_*.py
 │
-├── tests/                         # Pytest test suite
+├── tests/                         # Pytest suite (see Running Tests)
 ├── notebooks/                     # Jupyter notebooks
-├── requirements.txt
-├── pyproject.toml
+├── examples/                      # cycle_companion_setup.py + sample data
+├── loadtests/                     # Locust load tests
+├── pyproject.toml                 # Dependencies (uv) + ruff + pytest config
 ├── Dockerfile
-└── .env                           # Environment variables
+└── .env                           # Environment variables (never commit)
 ```
 
 ---
 
 ## API Routes
+
+Canonical, exhaustive references: `API_V1_REFERENCE.md` and `API_V2_REFERENCE.md`.
+Quick orientation:
 
 ### Primary API (`/api`) - Clerk JWT Auth
 
@@ -143,85 +103,56 @@ server/
 |--------|----------|-------------|
 | GET | `/api/me` | Current user profile |
 | POST | `/api/me/complete-onboarding` | Mark onboarding done |
-| GET | `/api/companions` | List companions (paginated) |
-| POST | `/api/companions` | Create companion |
-| GET | `/api/companions/{id}` | Get companion detail |
-| PUT | `/api/companions/{id}` | Update companion |
-| DELETE | `/api/companions/{id}` | Delete companion |
-| POST | `/api/companions/{id}/versions` | Create version |
-| GET | `/api/companions/{id}/versions` | List versions |
-| POST | `/api/projects/{project_id}/api-keys` | Create API key |
-| GET | `/api/projects/{project_id}/api-keys` | List API keys |
+| GET/POST | `/api/companions` | List / create companions |
+| GET/PUT/DELETE | `/api/companions/{id}` | Get / update / delete companion |
+| GET | `/api/companions/{id}/versions` | List versions (`/{version_id}` for one) |
+| POST/GET | `/api/projects/default/keys` | Create / list API keys |
+| DELETE | `/api/projects/default/keys/{key_id}` | Revoke API key |
+| POST/GET | `/api/companions/{id}/knowledge-assets` | Upload / list knowledge files |
+| GET | `/api/auth/dev-token` | Dev token (only with `DISABLE_AUTH_FOR_TESTING=true`) |
 
 ### Client SDK (`/v1`) - Project API Key Auth
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/v1/companions` | List companions |
-| POST | `/v1/companions` | Create companion |
-| GET | `/v1/companions/{id}` | Get companion |
-| PUT | `/v1/companions/{id}` | Update companion |
-| DELETE | `/v1/companions/{id}` | Delete companion |
-| POST | `/v1/companions/{id}/chat` | Send message (streaming/direct) |
-| POST | `/v1/companions/{id}/sessions` | Create voice session |
-| GET | `/v1/companions/{id}/profile-schema` | Get profile schema |
-| PUT | `/v1/companions/{id}/profile-schema` | Update profile schema |
-| POST | `/v1/companions/{id}/knowledge` | Ingest knowledge |
-| GET | `/v1/companions/{id}/knowledge` | List knowledge assets |
-| DELETE | `/v1/companions/{id}/knowledge/{asset_id}` | Delete knowledge |
-| POST | `/v1/companions/{id}/knowledge/search` | Search knowledge |
-| POST | `/v1/companions/{id}/core-memories` | Update core memories |
-| POST | `/v1/companions/{id}/tools` | Index OpenAPI spec for tools |
-| GET | `/v1/companions/{id}/tools` | List tool specs |
-| GET | `/v1/companions/{id}/tools/{spec_id}` | Get tool spec details |
-| PATCH | `/v1/companions/{id}/tools/{spec_id}` | Update tool secrets config |
-| DELETE | `/v1/companions/{id}/tools/{spec_id}` | Delete tool spec |
-| POST | `/v1/secrets` | Create or update a secret |
-| GET | `/v1/secrets` | List secrets (metadata only) |
-| DELETE | `/v1/secrets/{secret_name}` | Delete a secret |
+| GET/POST | `/v1/companions` | List / create companions |
+| GET/PATCH/DELETE | `/v1/companions/{id}` | Get / update / delete companion |
+| POST | `/v1/companions/{id}/chat` | Send message (`/chat/stream` for SSE) |
+| POST | `/v1/sessions` | Create voice session (`PATCH /v1/sessions/{id}` to update) |
+| GET/PUT | `/v1/companions/{id}/profile-schema` | Get / update profile schema |
+| POST | `/v1/companions/{id}/knowledge` | Ingest knowledge (`/knowledge/search` to query) |
+| GET | `/v1/knowledge-jobs/{job_id}` | Poll ingestion job |
+| POST | `/v1/companions/{id}/core-memories` | Seed core memories |
+| POST/GET | `/v1/companions/{id}/tools` | Index / list tool specs (`/{spec_id}`: GET/PATCH/DELETE) |
+| POST/GET | `/v1/secrets` | Create / list secrets (`DELETE /v1/secrets/{name}`) |
+| GET | `/v1/voice-mappings` | Voice name catalog (unauthenticated) |
 
-### Conversations (`/conversations`) - Clerk Auth
+### v2 API (`/v2`) - Project API Key Auth
+
+Relationships, messages (REST + SSE + WebSocket), sessions, behaviors (+ relationship-scoped
+overrides + `/definition` for source code), memory, summaries, inbox, voice. See
+`API_V2_REFERENCE.md` §4 — it is accurate and complete.
+
+### Voice Sessions - WebSocket
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/conversations` | Create conversation |
-| GET | `/conversations/{id}` | Get conversation |
-| GET | `/conversations/{id}/messages` | Get messages (paginated) |
-| POST | `/conversations/{id}/messages` | Send message with context plan |
-| POST | `/conversations/{id}/messages/stream` | Stream message response |
-
-### Voice Sessions (`/sessions`) - WebSocket
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/sessions` | Create session (returns WS URL + token) |
-| WS | `/sessions/{session_id}` | Audio stream (binary PCM) |
-
-### Tools (`/api/tools`) - Clerk Auth
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/tools/index` | Index OpenAPI spec |
-| GET | `/api/tools` | List tool specs |
-| PATCH | `/api/tools/{spec_id}/secrets-config` | Update secrets mapping |
-| DELETE | `/api/tools/{spec_id}` | Delete tool spec |
+| POST | `/sessions/` | Create v1 session (returns WS URL + token) |
+| WS | `/sessions/ws/{session_id}` | Audio stream (binary PCM) |
+| POST | `/v2/.../voice/token` + WS `/v2/.../voice/connect` | v2 voice (companion- or relationship-scoped) |
 
 ### Analytics (`/api/analytics`) - Clerk Auth
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/analytics/conversations/metrics` | Conversation metrics |
-| GET | `/api/analytics/conversations/time-series` | Time series data |
-| POST | `/api/analytics/jobs` | Create labeling/summarization job |
-| GET | `/api/analytics/jobs/{id}` | Get job status |
+Conversations listing/detail/messages/system-prompt, per-user summaries, labeling
+(`/companions/{id}/label-conversations`, `/labels`), jobs (`/jobs/{id}`, `/jobs/{id}/events`),
+plus `privacy/*` and `share/*` families. See `app/routers/analytics.py`.
 
-### Memory (`/api/memories`) - Clerk Auth
+### Memory (`/api`) - Clerk Auth
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/memories/{companion_id}` | List memories |
-| POST | `/api/memories/{companion_id}` | Add memory |
-| DELETE | `/api/memories/{id}` | Delete memory |
+| GET/POST | `/api/companions/{companion_id}/memories` | List / add memories (`/search` to query) |
+| GET/DELETE | `/api/memories/{memory_id}` | Get / delete memory (`/api/memories/stats` for stats) |
 
 ---
 
@@ -235,46 +166,43 @@ server/
 - `id` (UUID, PK), `owner_id` (FK users), `name`, `slug` (unique), `is_default`
 
 ### `companions`
-- `id` (UUID, PK), `owner_id`, `project_id`, `name`, `description`, `metadata` (JSONB config)
+- `id` (UUID, PK), `owner_id`, `project_id`, `name`, `description`, `metadata` (JSONB)
 
 ### `companion_versions`
-- `id` (UUID, PK), `companion_id`, `version_number`, `system_prompt`, `voice_id`
-- `memory_enabled`, `config` (JSONB), `status` (DRAFT/DEPLOYED/ARCHIVED)
+- `id` (UUID, PK), `companion_id`, `version_number`, `config` (JSONB — system_prompt,
+  inference, memory, voice, layers, classifier, ...), `status` (DRAFT/DEPLOYED/ARCHIVED)
+- `system_prompt`, `voice_id`, `memory_enabled` are legacy columns kept for backfill;
+  new writes go through `config` (migration `0053_rename_system_prompt_to_config.sql`)
 
-### `conversations`
-- `id` (UUID, PK), `companion_id`, `external_user_id`, `share_id`
-- `started_at`, `ended_at`, `message_count`, `context_engine`
+### `relationships`
+- `id` (UUID, PK), `companion_id`, `external_user_id`, `profile` (JSONB), `config` (JSONB),
+  `version`, timestamps — the core v2 user↔companion state
 
-### `messages`
-- `id` (UUID, PK), `conversation_id`, `role` (user/assistant/system), `content`
-- `input_modality` (text/voice/image), `pii_spans` (JSONB), `created_at`
+### `conversations` / `messages`
+- Conversations: `id`, `companion_id`, `external_user_id`, `share_id`, counters
+- Messages: `id`, `relationship_id`/`conversation_id`, `role`, `content`, `seq`,
+  `input_modality` (text/voice/image), `metadata` (JSONB), `is_proactive`, `created_at`
 
-### `memories` (pgvector)
-- `id` (UUID, PK), `companion_id`, `content`, `embedding` (vector)
-- `importance` (0-1), `modality`, `external_user_id`, `is_core`
+### `memories` (pgvector) / `memory_v2_entries`
+- `memories`: `companion_id`, `content`, `embedding` (vector, HNSW), `importance`, `is_core`
+- `memory_v2_entries`: `relationship_id`, `content`, `type` — flat scratchpad injected into prompts
 
 ### `project_api_keys`
-- `id` (UUID, PK), `project_id`, `prefix` (unique), `secret_hash`, `salt`
-- `status` (active/revoked), `scopes`, `expires_at`
+- `id`, `project_id`, `prefix` (unique, `emk_<stage>_<tag>`), `secret_hash`, `salt`,
+  `status`, `scopes`, `expires_at`
 
-### `tool_specs`
-- `id` (UUID, PK), `project_id`, `companion_id`, `spec_name`
-- `json_content` (JSONB - OpenAPI spec), `secrets_config`
+### `behaviors` / `companion_behavior_links`
+- `behaviors`: `id`, `project_id`, `key`, `name`, `description`, `source_code`, `version`,
+  `dependencies`, `timeout_seconds`, `block_network` (renamed from `actions`, migration 0049/0050)
+- `companion_behavior_links`: `companion_id`, `behavior_id`, `relationship_id` (NULL = default),
+  `triggers` (JSONB), `priority`, `enabled`, `webhook_url`, `webhook_secret`, `params`
 
-### `tool_operations`
-- `id` (UUID, PK), `tool_spec_id`, `operation_id`, `method`, `path`
-- `parameters` (JSONB), `request_body_schema`, `response_schema`
+### `tool_specs` / `tool_operations` / `project_secrets`
+- OpenAPI spec storage, parsed operations, encrypted secrets
 
-### `project_secrets`
-- `id` (UUID, PK), `project_id`, `name`, `encrypted_value`
-
-### `actions`
-- `id` (UUID, PK), `companion_id`, `key`, `action_type` (webhook/modal/scheduled)
-- `config` (JSONB), `triggers` (JSONB), `enabled`
-
-### `background_jobs`
-- `id` (UUID, PK), `companion_id`, `type` (labeling/summarization/privacy)
-- `status`, `total_items`, `processed_count`, `error_count`
+### `jobs`
+- Unified async job queue: `job_type`, `status`, `run_at`, `attempts`, `companion_id`,
+  `behavior_key`, `params`, `result`, counters
 
 ---
 
@@ -290,12 +218,15 @@ def get_current_user_optional() -> Optional[User]  # Non-failing
 
 ### Project API Keys (SDK/External)
 ```python
-# Format: emk_dev_<prefix>.<secret>
+# Format: emk_<stage>_<12charTag>.<secret>   e.g. emk_prod_a1b2c3d4e5f6.…
+# The whole "emk_<stage>_<tag>" part is the stored `prefix`; stage comes from
+# API_KEY_ENV (falls back to ENV, default "dev"). See app/services/api_keys.py.
 def get_project_api_subject(request, conn) -> ProjectApiKeySubject
 ```
 
 ### Development Bypass
-Set `DISABLE_AUTH_FOR_TESTING=true` to skip authentication.
+Set `DISABLE_AUTH_FOR_TESTING=true` to skip authentication. This also exposes
+`GET /api/auth/dev-token` and enables the `mock-dev-token` bearer. Local use only.
 
 ---
 
@@ -304,28 +235,26 @@ Set `DISABLE_AUTH_FOR_TESTING=true` to skip authentication.
 ### Context Engine (`context/orchestrator.py`)
 Builds context plans by executing parallel layers:
 1. **Core Prompt Layer**: System prompt + core memories
-2. **Memory Layer**: Retrieved memories (gated by heuristic)
+2. **Memory Layer**: Retrieved memories (gated by classifier/heuristic)
 3. **Knowledge Layer**: Vector search results
 4. **Tools Layer**: Available tool definitions
-5. **Actions Layer**: Triggered actions
+5. **Behaviors Layer**: Triggered behaviors (renamed from "actions")
 
 ```python
 async def build_context_plan(
-    companion_id, conversation_id, user_message, ...
+    *, conn, companion_config, relationship_id, session_id,
+    include_memory=..., include_knowledge=..., include_tools=..., include_behaviors=..., ...
 ) -> ContextPlan
 ```
 
 ### Memory System
-- **Ingestion**: `memory_service.py` + Modal worker
-- **Retrieval**: `memory_runtime.py` (heuristic-gated vector search)
-- **Storage**: pgvector with HNSW index
+- **Ingestion**: `memory_service.py` → Modal worker (`em-memory-v2`)
+- **Retrieval**: `context/memory_runtime.py` (gated vector search), `memory_v2_layer.py`
+- **Storage**: pgvector with HNSW index; Memory v2 rows in `memory_v2_entries`
 
 ```python
-# Heuristic gate
-should_retrieve_memories(message, history) -> bool
-
-# Vector search
-retrieve_regular_memories(companion_id, query, top_k) -> List[Memory]
+async def should_retrieve_memories(message, history) -> bool
+async def retrieve_regular_memories(companion_id, query, top_k) -> List[Memory]
 ```
 
 ### Tool Integration
@@ -333,54 +262,44 @@ retrieve_regular_memories(companion_id, query, top_k) -> List[Memory]
 - **Execution**: Build HTTP request, inject secrets, call endpoint
 
 ```python
-# In modals/workers/tools.py
-def index_tools(spec_json, companion_id, project_id)
-def call_tool(operation_id, parameters, secrets)
+# Modal methods in modals/workers/tools.py ("em-tools")
+index_tools, retrieve_best_tool, choose_and_parametrize_tool, use_api_tool
 ```
 
 ### LLM Resolution
 ```python
 # In llm_resolver.py
-resolve_llm_client(provider_string) -> AsyncOpenAI
+resolve_llm_client(provider_string, default_model=...) -> tuple[client, model, used_default]
 
-# Supported: openai, openrouter, vllm
+# Client keys: openai, openrouter, vllm — alias registry in _PROVIDER_REGISTRY
 ```
 
 ---
 
 ## Modal Workers
 
-### `em-tools` - Tool Execution & Indexing
-```python
-class ToolsWorker:
-    def index_tools(spec_json, ...)  # Parse OpenAPI spec
-    def call_tool(operation, params)  # Execute HTTP request
-```
+Deployed with `uv run python app/scripts/modal_deploy.py`:
 
-### `em-db` - Database Gateway
-```python
-class DbGateway:
-    def start_labeling_job(...)
-    def start_summary_job(...)
-    def start_privacy_job(...)
-    def create_memories_batch(...)
-```
+- **`em-tools`** — tool indexing/execution (`index_tools`, `retrieve_best_tool`,
+  `choose_and_parametrize_tool`, `use_api_tool`)
+- **`em-db`** — database gateway for workers (`start_labeling_job`, `start_summary_job`,
+  `start_privacy_job`, memory batch writes, message reads)
+- **`em-memory-v2`** — memory ingestion + relationship summarization
+- Label/summarize/redact conversation workers
 
-### Deploying Workers
-```bash
-uv run python app/scripts/modal_deploy.py
-```
+Without deployed workers, text chat works but memory ingestion, summaries, and
+behavior execution are no-ops.
 
 ---
 
 ## Environment Variables
 
+See `.env.example` for the full annotated list. Highlights:
+
 ### Database
 ```
-DATABASE_DSN=postgresql://...
-SUPABASE_URL=https://...supabase.co
-SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_KEY=...
+DATABASE_DSN=postgresql://...          # what the app reads
+DATABASE_TRANSACTION_DSN=...           # read by migrate scripts; falls back to DATABASE_DSN
 ```
 
 ### Authentication
@@ -389,70 +308,55 @@ CLERK_SECRET_KEY=sk_test_...
 CLERK_JWT_KEY=-----BEGIN PUBLIC KEY-----...
 CLERK_AUTHORIZED_PARTIES=http://localhost:3000,...
 DISABLE_AUTH_FOR_TESTING=false
+SEED_ENDPOINT_ENABLED=false
 ```
 
 ### LLM Providers
 ```
-OPENAI_API_KEY=sk-proj-...
-OPENROUTER_API_KEY=sk-or-v1-...
-LLM_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_API_KEY=sk-proj-...             # OpenAI models, embeddings, vector stores
+OPENROUTER_API_KEY=sk-or-v1-...        # Claude/Gemini/... aliases
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1   # optional override
 ```
 
 ### Voice Services
 ```
-ELEVEN_API_KEY=sk_...
-CARTESIA_API_KEY=sk_car_...
+ELEVEN_API_KEY=...
+CARTESIA_API_KEY=...
 DEEPGRAM_API_KEY=...
-DAILY_API_KEY=...
 ```
 
-### Memory System
+### Memory / Modal / S3 / Security
 ```
 MEMORY_RETRIEVAL_ENABLED=true
 MEMORY_TOP_K_DEFAULT=12
 MEMORY_RETRIEVAL_TIMEOUT_MS=2500
+MODAL_ENVIRONMENT=... MODAL_TOKEN_ID=... MODAL_TOKEN_SECRET=...
+AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... KNOWLEDGE_S3_BUCKET=your-bucket
+ENCRYPTION_KEY=...                      # AES-256 key for project secrets
+INTERNAL_API_KEY=... WS_TOKEN_SECRET=...
 ```
 
-### Modal
-```
-MODAL_ENVIRONMENT=staging
-MODAL_TOKEN_ID=ak-...
-MODAL_TOKEN_SECRET=as-...
-```
-
-### AWS S3
-```
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
-KNOWLEDGE_S3_BUCKET=emotion-machine-knowledge-prod
-```
-
-### Security
-```
-ENCRYPTION_KEY=... (AES-256 key for secrets)
-```
+Observability (`OTEL_*`): see `OBSERVABILITY.md`.
 
 ---
 
 ## Running Tests
 
 ```bash
-# All tests
+# Offline suite (default — no DB, network, or credentials needed)
 uv run pytest
 
-# Single file
-uv run pytest tests/test_memory_integration.py -vv
+# Single file / test
+uv run pytest tests/test_share_tokens.py -vv
+uv run pytest tests/test_file.py::test_name
 
-# With coverage
-uv run pytest --cov=app
+# Integration tiers (marker assignment in tests/conftest.py)
+uv run pytest -m live    # needs a running server + EM_BASE_URL/TEST_EM_API_KEY + seeded DB
+uv run pytest -m modal   # needs deployed Modal workers + credentials
 ```
 
-### Key Test Files
-- `test_api_memory_integration.py` - Memory system
-- `test_client_api.py` - Client SDK endpoints
-- `test_context_plan.py` - Context engine
-- `test_tools_secrets.py` - Tool secret encryption
-- `test_encryption.py` - AES encryption
+`pyproject.toml` sets `addopts = "-ra -m 'not live and not modal'"`, so the default
+run excludes both integration tiers. There is no coverage plugin installed.
 
 ---
 
@@ -462,14 +366,16 @@ uv run pytest --cov=app
 # Start server
 uv run uvicorn app.main:app --reload --port 8100
 
-# Run migrations
-uv run alembic upgrade head
+# Run migrations (raw SQL, applied in filename order; no state table)
+DATABASE_DSN=postgresql://... bash app/scripts/migrate.sh
+bash app/scripts/migrate_latest.sh    # only the newest file
+bash app/scripts/migrate_range.sh     # a numbered range
 
 # Deploy Modal workers
 uv run python app/scripts/modal_deploy.py
 
 # Generate API key
-uv run python app/scripts/create_project_api_key.py <project_id>
+EM_PROJECT_ID=... EM_PROJECT_OWNER_ID=... uv run python app/scripts/create_project_api_key.py
 
 # Export OpenAPI schema
 uv run python app/scripts/export_v1_openapi.py
@@ -483,7 +389,7 @@ uv run python app/scripts/export_v1_openapi.py
 ┌─────────────────────────────────────────────────────────────┐
 │                      FastAPI Application                     │
 │  ┌─────────────────────────────────────────────────────────┐ │
-│  │ Routers: /api, /v1, /sessions, /conversations, etc.    │ │
+│  │ Routers: /api, /v1, /v2, /sessions, /conversations, ... │ │
 │  └─────────────────────────────────────────────────────────┘ │
 │                              ↓                               │
 │  ┌─────────────────────────────────────────────────────────┐ │
@@ -491,16 +397,16 @@ uv run python app/scripts/export_v1_openapi.py
 │  └─────────────────────────────────────────────────────────┘ │
 │                              ↓                               │
 │  ┌─────────────────────────────────────────────────────────┐ │
-│  │ Services: LLM, Memory, Knowledge, Context, Tools       │ │
+│  │ Services: LLM, Memory, Knowledge, Context, Behaviors    │ │
 │  └─────────────────────────────────────────────────────────┘ │
 │                              ↓                               │
 │  ┌─────────────────────────────────────────────────────────┐ │
-│  │ Repositories: Companion, Conversation, Memory, State   │ │
+│  │ Repositories: Companion, Relationship, Memory, State    │ │
 │  └─────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                                ↓
 ┌──────────────────────────────────────────────────────────────┐
-│  PostgreSQL (Supabase)         │  External Services          │
+│  PostgreSQL (pgvector)         │  External Services          │
 │  - Core tables                 │  - OpenAI/OpenRouter (LLM)  │
 │  - pgvector (embeddings)       │  - ElevenLabs/Cartesia (TTS)│
 │  - HNSW index (memory)         │  - AWS S3 (storage)         │
@@ -518,15 +424,17 @@ uv run python app/scripts/export_v1_openapi.py
 
 **Memory not retrieving**: Verify `MEMORY_RETRIEVAL_ENABLED=true` and check pgvector index
 
+**Memory never ingesting**: Modal workers not deployed — run `modal_deploy.py`
+
 **Tool execution errors**: Check `project_secrets` encryption and `secrets_config` mapping
 
-**Modal worker issues**: Verify `MODAL_TOKEN_ID`/`MODAL_TOKEN_SECRET` and run `modal deploy`
+**Modal worker issues**: Verify `MODAL_TOKEN_ID`/`MODAL_TOKEN_SECRET` and redeploy
 
 ### Logging
 ```python
-import structlog
-logger = structlog.get_logger()
-logger.info("message", key=value)
+import logging
+logger = logging.getLogger(__name__)
+logger.info("message %s", value)
 ```
 
 ---
@@ -579,4 +487,4 @@ The codec is set up via `init=_setup_jsonb_codec` in the connection pool.
 ### Adding a Modal Worker
 1. Create worker class in `app/modals/workers/`
 2. Define Modal app with `@app.cls`
-3. Deploy with `modal deploy`
+3. Deploy with `uv run python app/scripts/modal_deploy.py`

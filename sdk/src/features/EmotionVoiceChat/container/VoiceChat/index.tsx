@@ -6,13 +6,15 @@ import { ChatBubble, type ChatBubbleState } from "@/features/EmotionVoiceChat/co
 interface VoiceChatProps {
   apiKey: string;
   companionId: string;
+  baseUrl?: string;
 }
 
-export function VoiceChat({ apiKey, companionId }: VoiceChatProps) {
+export function VoiceChat({ apiKey, companionId, baseUrl }: VoiceChatProps) {
     const [clientStatus, setClientStatus] = useState<CompanionClientStatus>('init')
     const [conversationId, setConversationId] = useState<string | null>(null);
     const companionClientRef = useRef<CompanionClient>(new CompanionClient({
-        apiKey
+        apiKey,
+        ...(baseUrl ? { baseUrl } : {})
     }))
 
     useEffect(() => {

@@ -8,7 +8,7 @@ Python SDK for building AI companions with persistent relationships.
 pip install emotion-machine
 ```
 
-The client depends on `httpx` and `websockets`, targeting Python 3.10+.
+The client depends on `httpx`, `websockets`, and `cron-validator`, targeting Python 3.10+.
 
 ## Quick Start
 

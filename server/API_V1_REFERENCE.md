@@ -1,16 +1,16 @@
-# Emotion Machine API v1 Reference
+# Personality Machine API v1 Reference
 
-Base URL: `https://api.emotionmachine.ai/v1`
+Base URL: `https://api.emotionmachine.ai/v1` (hosted) or `http://localhost:8100/v1` (self-hosted)
 
 ## Authentication
 
-All `/v1` endpoints require API key authentication via Bearer token:
+All `/v1` endpoints require API key authentication via Bearer token (exception: `GET /v1/voice-mappings` is public):
 
 ```bash
-Authorization: Bearer em_your_api_key_here
+Authorization: Bearer emk_dev_a1b2c3d4e5f6.your_secret_here
 ```
 
-API keys are scoped to a project. All resources (companions, conversations, sessions) are automatically associated with the project tied to your API key.
+API keys have the format `emk_<stage>_<tag>.<secret>` (for example `emk_prod_a1b2c3d4e5f6.…`). Keys are scoped to a project. All resources (companions, conversations, sessions) are automatically associated with the project tied to your API key.
 
 ---
 
@@ -32,8 +32,10 @@ All audio data transmitted over WebSocket uses raw PCM format:
 |----------|-----------|-------------|-------|
 | **STT-LLM-TTS** | Client → Server | 16kHz | Required for Silero VAD |
 | **STT-LLM-TTS** | Server → Client | 24kHz | TTS output |
-| **OpenAI Realtime** | Client → Server | 24kHz | |
-| **OpenAI Realtime** | Server → Client | 24kHz | |
+
+> **Note:** `openai-realtime` is a legacy value. The server accepts it for backwards
+> compatibility but silently converts it to STT-LLM-TTS. All sessions use the
+> STT-LLM-TTS sample rates above.
 
 **Important:** The input and output sample rates differ for the STT-LLM-TTS pipeline. Clients must:
 - Send audio at **16kHz**
@@ -78,8 +80,10 @@ Audio is transmitted as raw binary frames (not JSON-wrapped).
 
 | Pipeline | On Connect |
 |----------|------------|
-| **OpenAI Realtime** | AI speaks first (greeting) |
 | **STT-LLM-TTS** | Waits for user to speak first |
+
+> `openai-realtime` is accepted as a legacy value and converted to STT-LLM-TTS,
+> so every session waits for the user to speak first.
 
 ---
 
@@ -101,14 +105,19 @@ Used in `/v1/companions/{id}/chat` requests via the `model` parameter, and in vo
 | `gemini` | OpenRouter | google/gemini-2.5-flash | Alias for gemini-2.5-flash |
 | `moonshot-kimi-k2` | OpenRouter | moonshotai/kimi-k2-0905 | Moonshot Kimi |
 | `local-vllm-qwen` | Self-hosted | Qwen/QwQ-32B-AWQ | Requires vLLM setup |
+| `claude-haiku-4.5` | OpenRouter | anthropic/claude-haiku-4.5 | Fast Claude |
+| `claude-sonnet-4.6` | OpenRouter | anthropic/claude-sonnet-4.6 | |
+| `claude-opus-4` / `-4.5` / `-4.6` | OpenRouter | anthropic/claude-opus-* | |
+| `gemini-3-flash` | OpenRouter | google/gemini-3-flash | |
+| `moonshot-kimi-k2.5` | OpenRouter | moonshotai/kimi-k2.5 | |
 
-### OpenAI Realtime Models
+The full alias registry lives in `server/app/services/llm_resolver.py`.
 
-Used in voice sessions with `openai-realtime` pipeline via `voiceConfig.realtimeModel`.
+### Legacy: OpenAI Realtime
 
-| Model ID | Notes |
-|----------|-------|
-| `gpt-realtime-mini-2025-10-06` | **Default** - Used when `realtimeModel` is not specified |
+The `openai-realtime` pipeline is no longer supported. The server accepts
+`pipeline_type: "openai-realtime"` for backwards compatibility and silently
+converts the session to STT-LLM-TTS. A `realtimeModel` field, if sent, is ignored.
 
 ### Voice Providers
 
@@ -141,7 +150,7 @@ Returns all companions in your project.
 
 ```bash
 curl -X GET "https://api.emotionmachine.ai/v1/companions" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Response** `200 OK`
@@ -162,7 +171,7 @@ curl -X GET "https://api.emotionmachine.ai/v1/companions" \
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Customer Support Agent",
@@ -210,7 +219,7 @@ curl -X POST "https://api.emotionmachine.ai/v1/companions" \
 
 ```bash
 curl -X GET "https://api.emotionmachine.ai/v1/companions/{companion_id}" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Response** `200 OK`
@@ -238,7 +247,7 @@ curl -X GET "https://api.emotionmachine.ai/v1/companions/{companion_id}" \
 
 ```bash
 curl -X PATCH "https://api.emotionmachine.ai/v1/companions/{companion_id}" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Updated Agent Name",
@@ -279,7 +288,7 @@ curl -X PATCH "https://api.emotionmachine.ai/v1/companions/{companion_id}" \
 
 ```bash
 curl -X DELETE "https://api.emotionmachine.ai/v1/companions/{companion_id}" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Response** `204 No Content`
@@ -294,7 +303,7 @@ No response body is returned on successful deletion.
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/chat" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "external_user_id": "user-123",
@@ -361,7 +370,7 @@ curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/chat" \
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/chat/stream" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "external_user_id": "user-123",
@@ -457,7 +466,7 @@ Creates a voice session and returns a WebSocket URL with a one-time authenticati
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "companionId": "550e8400-e29b-41d4-a716-446655440000"
@@ -475,7 +484,7 @@ curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
 **Voice Config Options**
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| pipeline_type | string | `openai-realtime` | `openai-realtime` or `stt-llm-tts` |
+| pipeline_type | string | `stt-llm-tts` | `stt-llm-tts` (`openai-realtime` is accepted as a legacy value and converted) |
 | voice_name | string | `alloy` | Voice name (see available voices below) |
 | temperature | float | 0.7 | LLM temperature |
 | stt_provider | string | — | Required for `stt-llm-tts`: `openai`, `deepgram`, `ultravox`, `cartesia` |
@@ -502,7 +511,7 @@ curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
 **Example: Start New Conversation (Simplest)**
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "companionId": "550e8400-e29b-41d4-a716-446655440000"
@@ -515,7 +524,7 @@ Only `companionId` and `conversationId` are needed - the conversation already ha
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "companionId": "550e8400-e29b-41d4-a716-446655440000",
@@ -526,13 +535,13 @@ curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
 **Example: With Custom Voice**
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "companionId": "550e8400-e29b-41d4-a716-446655440000",
     "externalUserId": "user-123",
     "voiceConfig": {
-      "pipeline_type": "openai-realtime",
+      "pipeline_type": "stt-llm-tts",
       "voice_name": "sage"
     }
   }'
@@ -541,7 +550,7 @@ curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
 **Example: STT-LLM-TTS Pipeline**
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/sessions" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "companionId": "550e8400-e29b-41d4-a716-446655440000",
@@ -565,7 +574,7 @@ Update a session's configuration before the WebSocket connects. Cannot update ac
 
 ```bash
 curl -X PATCH "https://api.emotionmachine.ai/v1/sessions/{session_id}" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "companionId": "550e8400-e29b-41d4-a716-446655440000",
@@ -619,7 +628,7 @@ ws.onmessage = (event) => {
 
 The Emotion Machine Voice SDK provides a high-level TypeScript client for integrating real-time voice conversations into web applications. It handles WebSocket audio streaming, microphone capture, and audio playback.
 
-> **Note:** The SDK is currently available as source code. Contact us for access or integration support.
+> **Note:** The SDK ships in this repository under `sdk/` as a reference implementation and demo app. It is not published to npm; copy the `sdk/src/lib` code into your project.
 
 ### Quick Start
 
@@ -628,7 +637,7 @@ import { CompanionClient } from './lib/voice/CompanionClient';
 
 // 1. Initialize with your API key
 const client = new CompanionClient({
-  apiKey: 'em_live_xxxxxxxx',
+  apiKey: 'emk_live_a1b2c3d4e5f6.xxxxxxxx',
 });
 
 // 2. Listen to state changes
@@ -641,10 +650,9 @@ client.addEventListener('companion:state_change', (event) => {
 // 3. Start a new conversation
 const conversationId = await client.startConversation('companion-id-here', {
   voiceConfig: {
-    pipeline_type: 'openai-realtime',
+    pipeline_type: 'stt-llm-tts',
     voice_name: 'alloy',
-    temperature: 0.7,
-    realtimeModel: 'gpt-realtime-mini-2025-10-06'
+    temperature: 0.7
   }
 });
 
@@ -677,10 +685,9 @@ const conversationId = await client.startConversation(
   'companion-uuid',
   {
     voiceConfig: {
-      pipeline_type: 'openai-realtime',
+      pipeline_type: 'stt-llm-tts',
       voice_name: 'sage',
-      temperature: 0.7,
-      realtimeModel: 'gpt-realtime-mini-2025-10-06'
+      temperature: 0.7
     }
   }
 );
@@ -743,7 +750,7 @@ import { VoiceChat } from './features/EmotionVoiceChat';
 
 function App() {
   return (
-    <VoiceChat apiKey="em_live_xxxxxxxx" />
+    <VoiceChat apiKey="emk_live_a1b2c3d4e5f6.xxxxxxxx" />
   );
 }
 ```
@@ -778,10 +785,9 @@ function VoiceButton({ apiKey, companionId }: { apiKey: string; companionId: str
       // Start new conversation
       const id = await client.startConversation(companionId, {
         voiceConfig: {
-          pipeline_type: 'openai-realtime',
+          pipeline_type: 'stt-llm-tts',
           voice_name: 'alloy',
-          temperature: 0.7,
-          realtimeModel: 'gpt-realtime-mini-2025-10-06'
+          temperature: 0.7
         }
       });
       setConversationId(id);
@@ -841,7 +847,7 @@ Create a new conversation for a companion. This is useful when you need to uploa
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/conversations" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "external_user_id": "user-123"
@@ -868,7 +874,7 @@ Retrieve a conversation with all messages.
 
 ```bash
 curl -X GET "https://api.emotionmachine.ai/v1/conversations/{conversation_id}" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Response** `200 OK`
@@ -901,7 +907,7 @@ curl -X GET "https://api.emotionmachine.ai/v1/conversations/{conversation_id}" \
 
 ```bash
 curl -X GET "https://api.emotionmachine.ai/v1/companions/{companion_id}/conversations?limit=50&offset=0" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Query Parameters**
@@ -936,7 +942,7 @@ Define a JSON schema for user profiles associated with a companion.
 
 ```bash
 curl -X PUT "https://api.emotionmachine.ai/v1/companions/{companion_id}/profile-schema" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "schema": {
@@ -979,7 +985,7 @@ curl -X PUT "https://api.emotionmachine.ai/v1/companions/{companion_id}/profile-
 
 ```bash
 curl -X GET "https://api.emotionmachine.ai/v1/companions/{companion_id}/profile-schema" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Response** `200 OK`
@@ -1002,54 +1008,17 @@ curl -X GET "https://api.emotionmachine.ai/v1/companions/{companion_id}/profile-
 
 ## Knowledge Base
 
-### Upload Knowledge Asset
+### File Uploads (dashboard API)
 
-Upload a file to the companion's knowledge base.
+Raw file uploads use the dashboard API, not the `/v1` project-key API:
 
-```bash
-curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/knowledge-assets" \
-  -H "Authorization: Bearer em_your_api_key" \
-  -F "file=@document.pdf"
-```
+- `POST /api/companions/{companion_id}/knowledge-assets` — upload a file (multipart `file` field)
+- `GET /api/companions/{companion_id}/knowledge-assets` — list uploaded assets
+- `DELETE /api/companions/{companion_id}/knowledge-assets/{asset_id}` — delete an asset
 
-**Response** `201 Created`
-```json
-{
-  "id": "990e8400-e29b-41d4-a716-446655440000",
-  "project_id": "123e4567-e89b-12d3-a456-426614174000",
-  "companion_id": "550e8400-e29b-41d4-a716-446655440000",
-  "filename": "document.pdf",
-  "content_type": "application/pdf",
-  "size_bytes": 1048576,
-  "status": "pending",
-  "created_at": "2024-01-15T10:30:00Z"
-}
-```
-
----
-
-### List Knowledge Assets
-
-```bash
-curl -X GET "https://api.emotionmachine.ai/v1/companions/{companion_id}/knowledge-assets?limit=50" \
-  -H "Authorization: Bearer em_your_api_key"
-```
-
-**Response** `200 OK`
-```json
-[
-  {
-    "id": "990e8400-e29b-41d4-a716-446655440000",
-    "project_id": "123e4567-e89b-12d3-a456-426614174000",
-    "companion_id": "550e8400-e29b-41d4-a716-446655440000",
-    "filename": "document.pdf",
-    "content_type": "application/pdf",
-    "size_bytes": 1048576,
-    "status": "processed",
-    "created_at": "2024-01-15T10:30:00Z"
-  }
-]
-```
+These `/api` routes require a dashboard (Clerk) session token, not a project API key.
+With a project API key, use `POST /v1/companions/{id}/knowledge` (below) to ingest
+text or JSON content directly.
 
 ---
 
@@ -1059,7 +1028,7 @@ Ingest text content or trigger processing of an uploaded asset.
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/knowledge" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "text",
@@ -1095,7 +1064,7 @@ Search the companion's knowledge base using vector similarity.
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/knowledge/search" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "How do I reset my password?",
@@ -1133,7 +1102,7 @@ curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/knowled
 
 ```bash
 curl -X GET "https://api.emotionmachine.ai/v1/knowledge-jobs/{job_id}" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Response** `200 OK`
@@ -1160,7 +1129,7 @@ Upload an image to a conversation. The image is stored in S3 and automatically d
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/conversations/{conversation_id}/images" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -F "file=@photo.jpg"
 ```
 
@@ -1198,7 +1167,7 @@ Retrieve all images uploaded to a conversation.
 
 ```bash
 curl -X GET "https://api.emotionmachine.ai/v1/companions/{companion_id}/conversations/{conversation_id}/images" \
-  -H "Authorization: Bearer em_your_api_key"
+  -H "Authorization: Bearer emk_dev_your_api_key"
 ```
 
 **Response** `200 OK`
@@ -1223,7 +1192,7 @@ After uploading images, include their IDs in your chat request to provide image 
 
 ```bash
 curl -X POST "https://api.emotionmachine.ai/v1/companions/{companion_id}/chat" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "external_user_id": "user-123",
@@ -1244,20 +1213,20 @@ Image upload requires an existing conversation. Use this flow:
 ```bash
 # 1. Create a conversation
 curl -X POST ".../v1/companions/{companion_id}/conversations" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{"external_user_id": "user-123"}'
 # Response: {"conversation_id": "..."}
 
 # 2. Upload image to that conversation
 curl -X POST ".../v1/companions/{companion_id}/conversations/{conversation_id}/images" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -F "file=@photo.jpg"
 # Response includes image_id
 
 # 3. Send message referencing the image
 curl -X POST ".../v1/companions/{companion_id}/chat" \
-  -H "Authorization: Bearer em_your_api_key" \
+  -H "Authorization: Bearer emk_dev_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{"external_user_id": "user-123", "conversation_id": "...", "message": "What do you think of this?", "image_ids": ["..."]}'
 ```
@@ -1463,7 +1432,7 @@ A complete working example in vanilla JavaScript:
 
   <script>
     // Configuration
-    const API_KEY = 'em_your_api_key_here';
+    const API_KEY = 'emk_dev_a1b2c3d4e5f6.your_secret_here';
     const COMPANION_ID = 'your-companion-uuid-here';
     const API_BASE = 'https://api.emotionmachine.ai/v1';
 

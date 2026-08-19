@@ -6,7 +6,7 @@ Load testing suite for the Emotion Machine API using [Locust](https://locust.io/
 
 ```bash
 cd server
-uv add --group dev locust
+uv sync   # locust is already a dev dependency
 
 # Or if using pip
 pip install locust
@@ -17,9 +17,12 @@ pip install locust
 Set environment variables before running tests:
 
 ```bash
-export EM_API_KEY="em_live_your_api_key_here"
+export EM_API_KEY="emk_live_your_key_here"
 export EM_TEST_COMPANION_ID="your-test-companion-uuid"
-export EM_BASE_URL="http://localhost:8100"  # optional, defaults to localhost
+export EM_BASE_URL="http://localhost:8100"  # optional, defaults to http://localhost:8100/api/
+
+# Or copy .env.example to .env in this directory — config.py loads it automatically.
+# Also supported: EM_TEST_USER_PREFIX, EM_RATE_LIMIT
 ```
 
 ## Running Tests
@@ -30,36 +33,36 @@ export EM_BASE_URL="http://localhost:8100"  # optional, defaults to localhost
 cd server/loadtests
 
 # Run with web UI (default) - opens http://localhost:8089
-python run_test.py
+uv run python run_test.py
 
 # Quick smoke test (headless, 10 users, 1 minute)
-python run_test.py --quick
+uv run python run_test.py --quick
 
 # Run headless with defaults (100 users, 5 minutes)
-python run_test.py --headless
+uv run python run_test.py --headless
 ```
 
 ### Custom Parameters
 
 ```bash
 # Heavy load test (headless)
-python run_test.py --headless --users 500 --spawn-rate 50 --duration 15m
+uv run python run_test.py --headless --users 500 --spawn-rate 50 --duration 15m
 
 # Test specific scenarios only (works in both UI and headless)
-python run_test.py --tags messages,critical
+uv run python run_test.py --tags messages,critical
 
 # Target staging environment
-python run_test.py --host https://staging-api.emotionmachine.ai
+uv run python run_test.py --host https://staging-api.emotionmachine.ai
 ```
 
 ### Baseline Comparisons
 
 ```bash
 # Save current run as baseline (headless)
-python run_test.py --headless --baseline
+uv run python run_test.py --headless --baseline
 
 # Compare future runs against baseline
-python run_test.py --headless --compare results/baseline.json
+uv run python run_test.py --headless --compare results/baseline.json
 ```
 
 ## Test Scenarios
@@ -106,7 +109,7 @@ Results are stored in `results/` with timestamps for historical tracking:
 
 ```bash
 # Compare latest run against baseline
-python run_test.py --compare results/baseline.json
+uv run python run_test.py --compare results/baseline.json
 
 # Manual comparison
 python -c "

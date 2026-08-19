@@ -391,7 +391,7 @@ class EmotionMachine:
 
         Args:
             api_key: API key (defaults to EM_API_KEY env var)
-            base_url: API base URL (defaults to localhost:8100)
+            base_url: API base URL (defaults to https://api.emotionmachine.ai; env override EM_BASE_URL)
             timeout: Request timeout in seconds
         """
         self._api_key = api_key or os.getenv("EM_API_KEY")

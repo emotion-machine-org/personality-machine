@@ -44,3 +44,7 @@ node_modules/
 
 *mitm_mcp_traffic.db
 *pnpm-lock.yaml
+
+# Internal, never ship
+growth/
+.mcp.json

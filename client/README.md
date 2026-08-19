@@ -1,50 +1,39 @@
-# Welcome to your Expo app 👋
+# Mobile Client (Expo)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo React Native app for chatting with companions: text chat, voice sessions (WebRTC/Pipecat), and a companion builder screen.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Setup
 
 ```bash
-npm run reset-project
+npm install
+npx expo start     # or: npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Then open the app in a development build, Android emulator, iOS simulator, or [Expo Go](https://expo.dev/go).
 
-## Learn more
+## Configuration
 
-To learn more about developing your project with Expo, look at the following resources:
+The app talks to the API server (default `http://localhost:8100`). Override with:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+EXPO_PUBLIC_API_URL=http://your-host:8100 npx expo start
+```
 
-## Join the community
+> On a physical device, `localhost` refers to the phone — set `EXPO_PUBLIC_API_URL` to your machine's LAN IP.
 
-Join our community of developers creating universal apps.
+## Commands
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm start        # Expo dev server
+npm run ios      # iOS simulator
+npm run android  # Android emulator
+npm run web      # Web target
+npm run lint     # ESLint
+```
+
+## Structure
+
+- `app/(tabs)/chat.tsx` — chat screen
+- `app/(tabs)/builder.tsx` — companion builder
+- `hooks/usePipecatSession.tsx` — voice session hook
+- This project uses [Expo Router](https://docs.expo.dev/router/introduction) — files in `app/` are routes.

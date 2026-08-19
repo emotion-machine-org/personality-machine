@@ -114,9 +114,9 @@ pre-commit run --all-files   # Run manually
 
 ### Web Structure
 
-- `app/(authenticated)/` - Protected routes (companions, dashboard)
+- `app/(authenticated)/` - Protected routes (dashboard root, api-keys, relationships, share)
 - `app/companion/` - Public companion interface
-- `components/` - UI components (analytics, auth, dashboard, voice)
+- `components/` - UI components (auth, dashboard, memory-explorer, voice, ...)
 - `hooks/` - Custom React hooks
 - CodeMirror integration for prompt editing
 
@@ -144,7 +144,7 @@ pre-commit run --all-files   # Run manually
 
 **TypeScript/JavaScript**:
 
-- ESLint with max-warnings=0 on web/
+- ESLint on web/ (`npm run lint`); pre-commit enforces max-warnings=0 on `web/src/`
 - Pre-commit runs on `web/src/` files
 
 ## Gotchas

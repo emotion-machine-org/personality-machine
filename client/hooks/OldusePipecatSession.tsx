@@ -8,7 +8,7 @@ import { useAudioPlayer } from './useAudioPlayer';
 type SessionConfig = { systemPrompt: string; voice: string };
 
 /* ── env helpers ──────────────────────────────────────── */
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8101';
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8100';
 
 /* ── main hook ────────────────────────────────────────── */
 export function usePipecatSession() {

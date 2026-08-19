@@ -4,7 +4,7 @@ This backend uses [uv](https://docs.astral.sh/uv/) to manage Python runtimes, de
 
 ## Prerequisites
 
-- uv installed and available on your `PATH` (see the project docs or `uv-docs.txt` for installer snippets).
+- uv installed and available on your `PATH` (see https://docs.astral.sh/uv/ for installer snippets).
 - macOS/Linux: no additional setup is required. On Windows, prefer PowerShell when running the examples.
 
 ## Syncing the virtual environment
@@ -23,6 +23,11 @@ UV_CACHE_DIR=$(pwd)/.uv-cache uv sync
 This keeps all uv artifacts inside the repo so Git/Sandbox policies don’t interfere with `~/.cache` or `~/.local/share`.
 
 ## Running the test suite
+
+By default `uv run pytest` runs the **offline** suite only — integration tests are
+excluded via markers (`-m 'not live and not modal'` in `pyproject.toml`). Run them
+explicitly with `uv run pytest -m live` (needs a running server) or `uv run pytest -m modal`
+(needs deployed Modal workers). Marker assignment lives in `tests/conftest.py`.
 
 Use `uv run` so tests execute inside the managed environment without needing to activate `.venv` manually:
 

@@ -21,15 +21,15 @@ Authentication uses [Clerk](https://clerk.com). You need a Clerk application and
 ```bash
 npm run dev      # Development server
 npm run build    # Production build
-npm run lint     # ESLint (max-warnings=0)
+npm run lint     # ESLint (pre-commit enforces max-warnings=0)
 npm run test     # Vitest
 ```
 
 ## Structure
 
-- `src/app/(authenticated)/` — protected routes (companions, dashboard, API keys)
+- `src/app/(authenticated)/` — protected routes (dashboard root, API keys, relationships, share)
 - `src/app/companion/` — public companion interface
-- `src/components/` — UI components (analytics, auth, dashboard, voice)
+- `src/components/` — UI components (auth, dashboard, memory-explorer, voice, ...)
 - `src/hooks/` — React Query-based data hooks
 
 The API reference served at `/API_V2_REFERENCE.md` is a copy of `server/API_V2_REFERENCE.md` (the canonical source) — keep them in sync.

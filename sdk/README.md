@@ -7,6 +7,7 @@ This package is a **reference implementation and demo app** (Vite + React) — i
 ```bash
 npm install
 # create .env with VITE_EM_API_KEY and VITE_EM_COMPANION_ID
+# optional: VITE_EM_BASE_URL=http://localhost:8100 to target a self-hosted server
 npm run dev
 ```
 
@@ -21,8 +22,8 @@ import { CompanionClient } from './lib/voice/CompanionClient';
 
 // 1. Initialize with your API Key
 const client = new CompanionClient({
-  apiKey: 'emk_live_xxxxxxxx',
-  // baseUrl: '[https://api.emotionmachine.ai](https://api.emotionmachine.ai)', // Optional override
+  apiKey: 'emk_dev_a1b2c3d4e5f6.your_secret_here',
+  // baseUrl: 'https://api.emotionmachine.ai', // Optional override
 });
 
 // 2. Listen to state changes
@@ -66,7 +67,7 @@ new CompanionClient(options: CompanionClientOptions)
 |:-----------|:------:|-------------------------------------------------------------------:|
 | apiKey     | string |                              Required. Your EmotionMachine api key |
 | baseUrl    | string | Optional API endpoint (defaults to https://api.emotionmachine.ai). |
-| sampleRate | number |                 Optional audio sampling rate (defaults to 24000Hz) |
+| sampleRate | number |     Reserved — currently not applied; audio always runs at 24kHz |
 
 ### Audio Sample Rates
 
@@ -77,9 +78,7 @@ The SDK uses a single `sampleRate` for both input and output (defaults to 24kHz)
 | `openai-realtime` | 24kHz | 24kHz | ✅ Full support |
 | `stt-llm-tts` | 16kHz | 24kHz | ⚠️ See note below |
 
-> **Note for STT-LLM-TTS:** The server expects 16kHz input but sends 24kHz output. The SDK currently uses a single sample rate for both directions. For full STT-LLM-TTS support, either:
-> - Set `sampleRate: 16000` (input will be correct, but playback needs manual resampling from 24kHz)
-> - Use the lower-level [API directly](../server/API_V1_REFERENCE.md#client-audio-implementation-guide) with separate input/output handling
+> **Note for STT-LLM-TTS:** The server expects 16kHz input but sends 24kHz output. The SDK currently runs both directions at 24kHz (the `sampleRate` option is declared but not yet wired through). For full STT-LLM-TTS support, use the lower-level [API directly](../server/API_V1_REFERENCE.md#client-audio-implementation-guide) with separate input/output handling.
 
 ### Methods
 
@@ -100,10 +99,11 @@ startConversation(
 
 Joins an existing active conversation.
 ```typescript
-startConversation(
-  companionId: string, 
-  conversationOptions: ConversationOptions
-): Promise<string>
+joinConversation(
+  companionId: string,
+  conversationId: string,
+  conversationOptions?: Partial<ConversationOptions>
+): Promise<void>
 ```
 `disconnect`
 
@@ -136,12 +136,12 @@ Emitted whenever the connection status changes.
 - Detail: { newState: CompanionClientStatus }
 - Statuses:
   - **init**: Client initialized.
-  - **ready**: Authenticated and ready to connect.
   - **connecting**: Establishing WebSocket connection.
   - **connected**: Audio stream is active.
   - **closed**: Connection terminated.
   - **error**: An error occurred.
 
 `error`
-Emitted when an exception occurs (e.g., authentication failure).
-- Detail: { error: Error }
+Declared in the event map but **not currently dispatched** — failures surface as
+thrown errors from `startConversation`/`joinConversation` (e.g. `AuthenticationError`).
+Wrap those calls in try/catch instead of relying on this event.

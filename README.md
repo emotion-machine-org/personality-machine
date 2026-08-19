@@ -26,10 +26,11 @@ Create a companion via API or the web dashboard, deploy it, and every user who t
 
 ## Quickstart
 
-Requires Docker (Postgres with pgvector is provided by compose) and an [OpenRouter](https://openrouter.ai) API key for LLM calls.
+Requires Docker (Postgres with pgvector is provided by compose) and an OpenAI API key for LLM calls (add an [OpenRouter](https://openrouter.ai) key to use Claude/Gemini aliases).
 
 ```bash
-export OPENROUTER_API_KEY=sk-or-...
+export OPENAI_API_KEY=sk-...        # default companion model (gpt-4o-mini) + embeddings
+export OPENROUTER_API_KEY=sk-or-... # optional: Claude/Gemini model aliases
 DISABLE_AUTH_FOR_TESTING=true docker compose up --build
 ```
 
@@ -61,7 +62,8 @@ The server is configured entirely via environment variables — see [`server/.en
 | Variable | Purpose |
 |---|---|
 | `DATABASE_DSN` | Postgres connection string (needs the `vector` extension). Migration scripts read `DATABASE_TRANSACTION_DSN` and fall back to this. |
-| `OPENROUTER_API_KEY` / `LLM_BASE_URL` | LLM access (OpenAI-compatible; defaults to OpenRouter) |
+| `OPENAI_API_KEY` | OpenAI models (default chat model), embeddings, knowledge vector stores |
+| `OPENROUTER_API_KEY` / `OPENROUTER_BASE_URL` | Claude/Gemini/... model aliases via OpenRouter |
 | `CLERK_SECRET_KEY`, `CLERK_JWT_KEY`, ... | [Clerk](https://clerk.com) auth for the dashboard & user-facing APIs |
 | `DEEPGRAM_API_KEY`, `CARTESIA_API_KEY`, `ELEVEN_API_KEY` | Optional — voice pipelines |
 | `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET` | Optional — behavior execution and memory ingestion workers |
