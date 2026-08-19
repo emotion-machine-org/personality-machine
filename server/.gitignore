@@ -44,7 +44,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-*.python-version
+# *.python-version  (tracked: pins the uv Python version)
 .env
 .venv
 venv/
