@@ -1,0 +1,54 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: em
+      POSTGRES_PASSWORD: em
+      POSTGRES_DB: emotion_machine
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U em -d emotion_machine"]
+      interval: 2s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  migrate:
+    # The server image has no psql; reuse the postgres image for migrations.
+    image: pgvector/pgvector:pg16
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./server/app/supabase/migrations:/migrations:ro
+    environment:
+      DATABASE_TRANSACTION_DSN: "postgresql://em:em@db:5432/emotion_machine"
+    entrypoint:
+      - bash
+      - -c
+      - |
+        for f in $$(ls /migrations | sort); do
+          echo "Applying $$f"
+          psql "$$DATABASE_TRANSACTION_DSN" -v ON_ERROR_STOP=1 -q -f "/migrations/$$f"
+        done
+
+  server:
+    build:
+      # Root context is required: server/Dockerfile COPYs paths prefixed with server/.
+      context: .
+      dockerfile: server/Dockerfile
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_DSN: "postgresql://em:em@db:5432/emotion_machine"
+      # WARNING: only for local development — disables auth entirely.
+      DISABLE_AUTH_FOR_TESTING: "${DISABLE_AUTH_FOR_TESTING:-false}"
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+    ports:
+      - "8100:8100"
+
+volumes:
+  pgdata:

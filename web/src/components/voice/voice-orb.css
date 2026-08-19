@@ -1,0 +1,113 @@
+.voice-orb-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 48px;
+}
+
+/* Wrapper to keep the orb centered and stable */
+.voice-orb-main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Diffuse glow layer behind the orb */
+.voice-orb-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(60px);
+  z-index: 0;
+}
+
+/* Main red orb/circle - always visible when active */
+.voice-orb-button {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FF5372;
+  transition: background-color 0.4s ease;
+}
+
+.voice-orb-button:focus {
+  outline: none;
+}
+
+.voice-orb-button:focus-visible {
+  outline: 2px solid rgba(255, 83, 114, 0.5);
+  outline-offset: 4px;
+}
+
+/* Start label */
+.voice-orb-label {
+  font-size: 18px;
+  font-weight: 500;
+  color: #FFFFFF;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Indicator wrapper - centers the bars */
+.voice-orb-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bars container */
+.voice-orb-bars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+}
+
+/* Individual bar - white color */
+.voice-orb-bar {
+  width: 4px;
+  height: 100%;
+  background: #FFFFFF;
+  border-radius: 2px;
+  transform-origin: center;
+}
+
+/* Footer area - fixed height to prevent layout shift */
+.voice-orb-footer {
+  margin-top: 24px;
+  min-height: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* State indicator text */
+.voice-orb-state {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.3px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+/* Error message */
+.voice-orb-error {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #ff6b6b;
+  max-width: 300px;
+  text-align: center;
+}

@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files (keep .env.example, ignore actual .env)
+.env
+
+# Keep results for history tracking
+# Uncomment below to ignore large HTML reports if repo size is a concern
+# reports/*.html

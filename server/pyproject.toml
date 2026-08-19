@@ -1,0 +1,145 @@
+[project]
+name = "emotion-machine-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.12",
+    "uvicorn[standard]>=0.34.1",
+    "gunicorn>=20.1.0",
+    "asyncpg>=0.30.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "psycopg2-binary>=2.9.10",
+    "pgvector>=0.4.0",
+    "python-dotenv>=1.1.0",
+    "openai>=1.74.0,<2",
+    "websockets~=13.1",
+    "pipecat-ai[deepgram]>=0.0.99",
+    "twilio>=9.0.0",
+    "clerk-backend-api>=2.0.2",
+    "cartesia>=2.0.5",
+    "daily-python>=0.19.4",
+    "onnxruntime>=1.22.1",
+    "requests>=2.32.4",
+    "pytest>=8.2",
+    "pytest-asyncio>=0.24.0",
+    "boto3>=1.35.0",
+    "google-genai>=1.0.0",
+    # OpenTelemetry for tracing
+    "opentelemetry-api>=1.28.0",
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-exporter-otlp>=1.28.0",
+    "opentelemetry-instrumentation-fastapi>=0.49b0",
+    "opentelemetry-instrumentation-asyncpg>=0.49b0",
+    "opentelemetry-instrumentation-httpx>=0.49b0",
+    "opentelemetry-instrumentation-logging>=0.49b0",
+    "modal>=1.3.0.post1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel>=6.0.0",
+    "jupyter>=1.0.0",  # optional, for full Jupyter support
+]
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -m 'not live and not modal'"
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "live: requires a running API server (EM_BASE_URL, TEST_EM_API_KEY) and seeded DB; excluded by default",
+    "modal: requires deployed Modal workers and Modal credentials; excluded by default",
+]
+
+[dependency-groups]
+dev = [
+    "croniter>=2.0.0",
+    "matplotlib>=3.10.6",
+    "pandas>=2.3.2",
+    "ruff>=0.8.0",
+    "locust>=2.32.0",
+    "moto>=5.1.20",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+    "ERA",    # eradicate (commented-out code)
+    "PL",     # Pylint
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E501",    # line too long (handled by formatter)
+    "E402",    # module import not at top of file (needed for some patterns)
+    "B008",    # do not perform function calls in argument defaults (needed for FastAPI Depends)
+    "UP006",   # non-pep585-annotation (List -> list) - can enable later
+    "UP035",   # deprecated-import - can enable later
+    "RUF006",  # asyncio-dangling-task - review manually
+    "SIM102",  # collapsible-if - sometimes less readable
+    "SIM105",  # suppressible-exception - contextlib.suppress not always clearer
+    "SIM108",  # if-else-block-instead-of-if-exp - ternary not always clearer
+    "PLR2004", # magic values
+    "PLR0913", # Too many arguments in function definition (6 > 5)
+    "PLR0911", # Too many return statements (7 > 6)
+    "PLR0912", # Too many branches (45 > 12)
+    "PLR0915", # Too many statements (60 > 50)
+    "TC001",   # Move application import `x` into a type-checking block
+    "TC002",   # Move third-party import `x` into a type-checking block
+    "TC003",   # Move standard library import `x` into a type-checking block
+    "ARG002",  # Unused method argument
+    "B904",    # Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    "ERA001",  # Found commented-out code
+    "ARG001",  # Unused function argument: `x`
+    "PLC0415", # import-outside-top-level - deferred imports used widely for circular-import avoidance
+    "PLW0602", # global-variable-not-assigned
+    "PLW0603", # global-statement - module-level singletons used intentionally
+    "PTH",     # pathlib migration - not enforced yet
+    "RUF001",  # ambiguous-unicode-character-string
+    "RUF002",  # ambiguous-unicode-character-docstring
+    "RUF003",  # ambiguous-unicode-character-comment
+    "RUF012",  # mutable-class-default
+    "UP045",   # non-pep604-annotation-optional - can enable later
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG", "F401"]
+"app/main.py" = ["ARG001", "ERA001", "PLR0912"]  # FastAPI lifespan pattern, legacy sentry import, openapi function branches
+"app/modals/*" = ["ARG001", "F401", "F841", "PLC0415", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004", "PLW1510", "PTH", "B905", "SIM117", "RUF010", "UP045"]  # Modal workers: unused args/vars, dynamic imports, complex logic, magic values, subprocess, os.path, zip strict
+"app/context/*" = ["ARG001", "ARG002", "B007", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004", "RUF013", "TC001", "TC002", "TC003", "PLC0415"]  # Context layers: interface consistency, complex runtimes
+"app/repositories/behavior_repository.py" = ["F401", "PLR0913", "TC002", "TC003", "UP"]  # Behavior repo: complex link methods, type annotations
+"app/repositories/relationship_repository.py" = ["PLR0913", "TC002", "TC003"]  # Relationship repo: many args, type annotations
+"app/database/*" = ["PLW0602", "PLW0603", "RUF022", "PLR0915", "PLR2004"]  # Database module: global singletons, complex middleware, HTTP status codes
+"app/auth.py" = ["PLR2004", "B904", "PLC0415"]  # Auth module: HTTP status codes, exception chaining, dynamic imports
+"app/routers/v2/messages.py" = ["ARG001", "ARG002", "F841", "PLR0912", "PLR0913", "PLR0915", "TC001", "TC002", "TC003"]  # Messages endpoint: FastAPI params, complex streaming
+"app/routers/v2/websockets.py" = ["PLR0912", "PLR0913", "PLR0915", "TC001", "TC002", "TC003"]  # WebSocket endpoint: complex connection handling
+"app/services/message_processor.py" = ["PLR0913", "PLR2004", "PLC0415", "TC002"]  # Message processor: shared logic with many args, dynamic modal import
+"app/routers/api.py" = ["ARG001", "B904", "PLC0415", "RUF059"]  # API routes: FastAPI auth params, exception chaining, dynamic imports, unused unpacked vars
+"app/routers/voice/twilio.py" = ["ARG001", "B904", "PLC0415", "PLR0915", "TC003"]  # Twilio voice: event handlers, dynamic imports, complex pipeline
+"app/routers/voice/twilio_models.py" = ["TC003"]  # Twilio models: type annotations
+"loadtests/*" = ["ARG001", "PLR2004", "PLR0913", "PTH123"]  # Load tests: Locust conventions, magic values, many args, open()
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false

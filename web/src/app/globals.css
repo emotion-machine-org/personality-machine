@@ -1,0 +1,250 @@
+@import "tailwindcss";
+
+/*
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-gray-dark: #252525;
+  --color-gray-darker: #161616;
+  --color-gray-button: #3C3C3C;
+  --spacing-52: 13rem;
+  --spacing-266: 16.625rem;
+  --spacing-72: 4.5rem;
+}*/
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --spacing-52: 13rem;
+  --spacing-266: 16.625rem;
+  --spacing-72: 4.5rem;
+  /* neutrals you already have */
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-gray-dark: #252525;
+  --color-gray-darker: #161616;
+  --color-gray-button: #3C3C3C;
+  --color-gray-button-hover: #4C4C4C;
+
+  /* Dashboard V2 color system */
+  --color-panel-bg: #1A1A1A;
+  --color-dropdown-bg: #161616;
+  --color-input-editable: #393939;
+  --color-input-readonly: #232323;
+  --color-conversation-bg: #000000;
+  --color-title-text: #8E8E8E;
+  --color-tab-unselected: #5F5F5F;
+  --color-tab-selected: #FFFFFF;
+  --color-placeholder: #C0C0C0;
+  --color-text-readonly: #8E8E8E;
+  --color-option-text: #8E8E8E;
+  --color-link-text: #C0C0C0;
+
+  /* BRAND (red/pink) */
+  --color-brand-solid:       oklch(0.525 0.187 16.3); /* #BE2443 */
+  --color-brand-solid-hover: oklch(0.555 0.188 16.4); /* #C9304B */
+  --color-brand-bg:          oklch(0.211 0.032 6.6);  /* #251216 */
+  --color-brand-bg-hover:    oklch(0.187 0.035 8.3);  /* #200C10 */
+  --color-brand-border:      oklch(0.525 0.187 16.3); /* #BE2443 */
+
+  /* BLUE (your override) */
+  --color-blue-solid: oklch(0.558 0.047 240.1); /* #5B788D */
+  --color-blue-solid-hover: oklch(0.589 0.046 240.0); /* #648196 */
+  --color-blue-bg: oklch(0.229 0.017 237.7); /* #151E24 */
+  --color-blue-bg-hover: oklch(0.190 0.018 238.1); /* #0C151B */
+  --color-blue-border: oklch(0.584 0.023 237.0); /* #6F7E88 */
+
+  /* YELLOW */
+  --color-yellow-solid: oklch(0.569 0.115 94.4); /* #8D7505 */
+  --color-yellow-solid-hover: oklch(0.599 0.115 94.4); /* #967E19 */
+  --color-yellow-bg: oklch(0.256 0.022 95.7); /* #262317 */
+  --color-yellow-bg-hover: oklch(0.217 0.022 95.8); /* #1D1A0E */
+  --color-yellow-border: oklch(0.585 0.036 95.6); /* #827C64 */
+
+  /* GREEN */
+  --color-green-solid: oklch(0.65 0.12 142); /* brighter green */
+  --color-green-solid-hover: oklch(0.72 0.14 142); /* lighter green */
+  --color-green-bg: oklch(0.288 0.026 140.4); /* #242E22 */
+  --color-green-bg-hover: oklch(0.247 0.025 142.5); /* #1A2419 */
+  --color-green-border: oklch(0.581 0.035 139.4); /* #70806C */
+}
+
+@layer base {
+  * {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  body {
+    @apply bg-black text-white font-sans;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height: 1.2;
+  }
+
+  /* Hide textarea resize handles */
+  textarea {
+    resize: none;
+  }
+
+  /* Button hover states */
+  button {
+    @apply transition-colors duration-200 cursor-pointer;
+  }
+
+  /* Clickable elements cursor */
+  [role="button"],
+  [onClick],
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  /* Scrollbar styling for dark theme */
+  ::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  /* More prominent scrollbar for dropdown lists */
+  .dropdown-scroll-viewport {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 156, 156, 0.8) rgba(38, 38, 38, 0.95);
+    scrollbar-gutter: stable both-edges;
+  }
+
+  .dropdown-scroll-viewport::-webkit-scrollbar {
+    width: 8px !important;
+  }
+
+  .dropdown-scroll-viewport::-webkit-scrollbar-track {
+    background: rgba(38, 38, 38, 0.6) !important;
+    border-radius: 4px;
+  }
+
+  .dropdown-scroll-viewport::-webkit-scrollbar-thumb {
+    background: rgba(156, 156, 156, 0.7) !important;
+    border-radius: 4px;
+  }
+
+  .dropdown-scroll-viewport::-webkit-scrollbar-thumb:hover {
+    background: rgba(180, 180, 180, 0.9) !important;
+  }
+
+  .dropdown-scroll-area {
+    max-height: 15rem;
+  }
+
+  .dropdown-scrollbar {
+    display: flex;
+    width: 12px;
+    padding: 2px;
+    background: var(--color-gray-darker);
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .dropdown-scrollbar-thumb {
+    position: relative;
+    flex: 1;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+    min-height: 24px;
+  }
+
+  .dropdown-scrollbar-thumb::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 60%;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .dropdown-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 1);
+  }
+
+  .dialogmachine-clone-audio {
+    background: transparent;
+  }
+
+  .dialogmachine-clone-audio::-webkit-media-controls-enclosure {
+    background: transparent;
+    border-radius: 9999px;
+  }
+
+  .dialogmachine-clone-audio::-webkit-media-controls-panel {
+    background: transparent;
+  }
+
+  .dialogmachine-clone-audio::-webkit-media-controls-overflow-button {
+    display: none;
+  }
+
+  .dropdown-scrollbar-corner {
+    background: rgba(18, 18, 18, 0.95);
+  }
+
+  .dropdown-scroll-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    background: rgba(18, 18, 18, 0.95);
+  }
+
+  /* Scrollbar that only shows on hover - thin style */
+  .scrollbar-on-hover::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .scrollbar-on-hover::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-on-hover::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+  }
+
+  .scrollbar-on-hover:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .scrollbar-on-hover:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Firefox */
+  .scrollbar-on-hover {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-on-hover:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar completely */
+  .scrollbar-none {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}

@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/*.pyo
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/*.egg-info
+**/.venv
+**/venv
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Tests (excluded from production)
+**/tests
+**/test_*.py
+**/*_test.py
+
+# Documentation
+**/docs
+LICENSE
+
+# Local development
+.env
+.env.*
+**/.envrc
+docker-compose*.yml
+
+# Build artifacts
+**/dist
+**/build
+**/*.egg
+
+# Server-specific exclusions
+server/loadtests
+server/.venv
+server/uv.lock.bak
+
+# Web/SDK/Client (not needed for server image)
+web
+sdk
+client
+
+# Misc
+**/.DS_Store
+**/Thumbs.db
+*.log

@@ -1,0 +1,2638 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Emotion Machine API v1",
+    "description": "Public API for Emotion Machine companions, chat, knowledge, and voice sessions.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.emotionmachine.ai",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:8100",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/v1/companions": {
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "List Companions",
+        "operationId": "list_companions_v1_companions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompanionListItem"
+                  },
+                  "type": "array",
+                  "title": "Response List Companions V1 Companions Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Create Companion",
+        "operationId": "create_companion_v1_companions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanionResource"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}": {
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Get Companion",
+        "operationId": "get_companion_v1_companions__companion_id__get",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanionResource"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Update Companion",
+        "operationId": "update_companion_v1_companions__companion_id__patch",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanionResource"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Delete Companion",
+        "description": "Delete a companion.",
+        "operationId": "delete_companion_v1_companions__companion_id__delete",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/profile-schema": {
+      "put": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Upsert Profile Schema",
+        "operationId": "upsert_profile_schema_v1_companions__companion_id__profile_schema_put",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileSchemaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileSchemaResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Get Profile Schema",
+        "operationId": "get_profile_schema_v1_companions__companion_id__profile_schema_get",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileSchemaResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/knowledge-assets": {
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Upload Knowledge Asset",
+        "operationId": "upload_knowledge_asset_v1_companions__companion_id__knowledge_assets_post",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_knowledge_asset_v1_companions__companion_id__knowledge_assets_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeAssetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "List Knowledge Assets",
+        "operationId": "list_knowledge_assets_v1_companions__companion_id__knowledge_assets_get",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KnowledgeAssetResponse"
+                  },
+                  "title": "Response List Knowledge Assets V1 Companions  Companion Id  Knowledge Assets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/knowledge": {
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Ingest Knowledge",
+        "operationId": "ingest_knowledge_v1_companions__companion_id__knowledge_post",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeIngestionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/knowledge/search": {
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Search Knowledge",
+        "operationId": "search_knowledge_v1_companions__companion_id__knowledge_search_post",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeSearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/knowledge-jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Get Knowledge Job",
+        "operationId": "get_knowledge_job_v1_knowledge_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/chat": {
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Chat With Companion",
+        "operationId": "chat_with_companion_v1_companions__companion_id__chat_post",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/chat/stream": {
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Stream Chat With Companion",
+        "operationId": "stream_chat_with_companion_v1_companions__companion_id__chat_stream_post",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/conversations/{conversation_id}/images": {
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Upload Chat Image Api",
+        "description": "Upload an image for use in a conversation.\n\nThe image is stored in S3 and a description is extracted using a vision model\n(Gemini 2.0 Flash). The description is used to provide image context to the\ncompanion, which works with any text LLM regardless of vision capability.\n\nReturns:\n    - image_id: UUID for referencing the image in subsequent messages\n    - description: AI-extracted description of the image\n    - storage_url: Presigned URL for displaying the image\n    - mime_type: Content type of the uploaded image",
+        "operationId": "upload_chat_image_api_v1_companions__companion_id__conversations__conversation_id__images_post",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          },
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_chat_image_api_v1_companions__companion_id__conversations__conversation_id__images_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatImageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "List Conversation Images Api",
+        "description": "List all images uploaded to a conversation.",
+        "operationId": "list_conversation_images_api_v1_companions__companion_id__conversations__conversation_id__images_get",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          },
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatImageResponse"
+                  },
+                  "title": "Response List Conversation Images Api V1 Companions  Companion Id  Conversations  Conversation Id  Images Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/conversations/{conversation_id}": {
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Get Conversation",
+        "operationId": "get_conversation_v1_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__routers__client_api__ConversationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/companions/{companion_id}/conversations": {
+      "get": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "List Conversations For Companion",
+        "operationId": "list_conversations_for_companion_v1_companions__companion_id__conversations_get",
+        "parameters": [
+          {
+            "name": "companion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Companion Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "external_user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "External User Id"
+            }
+          },
+          {
+            "name": "external_user_prefix",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "External User Prefix"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConversationListItem"
+                  },
+                  "title": "Response List Conversations For Companion V1 Companions  Companion Id  Conversations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/sessions": {
+      "post": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Create a voice session",
+        "description": "Create a new voice session for a companion. Returns a WebSocket URL with a one-time token.",
+        "operationId": "create_voice_session_v1_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientSessionCreate"
+              },
+              "examples": {
+                "minimal": {
+                  "summary": "Minimal (OpenAI Realtime)",
+                  "description": "Only companionId is required. Uses OpenAI Realtime with 'alloy' voice.",
+                  "value": {
+                    "companionId": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                },
+                "with_user": {
+                  "summary": "With external user tracking",
+                  "description": "Track conversations per end-user.",
+                  "value": {
+                    "companionId": "550e8400-e29b-41d4-a716-446655440000",
+                    "externalUserId": "user-123"
+                  }
+                },
+                "custom_voice": {
+                  "summary": "Custom OpenAI voice",
+                  "description": "Use a different OpenAI Realtime voice.",
+                  "value": {
+                    "companionId": "550e8400-e29b-41d4-a716-446655440000",
+                    "voiceConfig": {
+                      "pipeline_type": "openai-realtime",
+                      "voice_name": "sage"
+                    }
+                  }
+                },
+                "stt_llm_tts": {
+                  "summary": "STT-LLM-TTS pipeline",
+                  "description": "Use modular pipeline with Deepgram STT, Claude LLM, and ElevenLabs TTS.",
+                  "value": {
+                    "companionId": "550e8400-e29b-41d4-a716-446655440000",
+                    "externalUserId": "user-123",
+                    "voiceConfig": {
+                      "pipeline_type": "stt-llm-tts",
+                      "stt_provider": "deepgram",
+                      "llm_provider": "claude-sonnet-4",
+                      "tts_provider": "elevenlabs",
+                      "voice_name": "Sarah",
+                      "temperature": 0.8
+                    }
+                  }
+                },
+                "continue_conversation": {
+                  "summary": "Continue existing conversation",
+                  "description": "Resume a previous conversation in voice mode. Only companionId and conversationId are needed.",
+                  "value": {
+                    "companionId": "550e8400-e29b-41d4-a716-446655440000",
+                    "conversationId": "660e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientSessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{session_id}": {
+      "patch": {
+        "tags": [
+          "client-api"
+        ],
+        "summary": "Update a voice session",
+        "description": "Update voice configuration for an inactive session. Cannot update sessions with active WebSocket connections.",
+        "operationId": "update_voice_session_v1_sessions__session_id__patch",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientSessionCreate"
+              },
+              "examples": {
+                "change_voice": {
+                  "summary": "Change voice",
+                  "description": "Update the voice before connecting.",
+                  "value": {
+                    "companionId": "550e8400-e29b-41d4-a716-446655440000",
+                    "voiceConfig": {
+                      "voice_name": "coral"
+                    }
+                  }
+                },
+                "switch_pipeline": {
+                  "summary": "Switch to STT-LLM-TTS",
+                  "description": "Change from OpenAI Realtime to modular pipeline.",
+                  "value": {
+                    "companionId": "550e8400-e29b-41d4-a716-446655440000",
+                    "voiceConfig": {
+                      "pipeline_type": "stt-llm-tts",
+                      "stt_provider": "openai",
+                      "llm_provider": "openai-gpt4o",
+                      "tts_provider": "openai",
+                      "voice_name": "alloy"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ClientSessionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Session ID"
+          },
+          "ws_url": {
+            "type": "string",
+            "title": "Ws Url",
+            "description": "WebSocket URL with one-time token"
+          },
+          "conversation_id": {
+            "type": "string",
+            "title": "Conversation Id",
+            "description": "Conversation ID (new or continued)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ws_url",
+          "conversation_id"
+        ],
+        "title": "ClientSessionResponse",
+        "description": "Response model for voice session creation."
+      },
+      "ChatCompletionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "object": {
+            "type": "string",
+            "title": "Object",
+            "default": "chat.completion"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/ChatChoice"
+            },
+            "type": "array",
+            "title": "Choices"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ChatUsage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created",
+          "model",
+          "choices",
+          "usage"
+        ],
+        "title": "ChatCompletionResponse"
+      },
+      "ChatChoice": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index",
+            "default": 0
+          },
+          "message": {
+            "$ref": "#/components/schemas/ChatMessage"
+          },
+          "finish_reason": {
+            "type": "string",
+            "title": "Finish Reason",
+            "default": "stop"
+          },
+          "emotion_machine": {
+            "type": "object",
+            "title": "Emotion Machine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ChatChoice"
+      },
+      "ChatMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage"
+      },
+      "ChatUsage": {
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer",
+            "title": "Prompt Tokens",
+            "default": 0
+          },
+          "completion_tokens": {
+            "type": "integer",
+            "title": "Completion Tokens",
+            "default": 0
+          },
+          "total_tokens": {
+            "type": "integer",
+            "title": "Total Tokens",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ChatUsage"
+      },
+      "Body_upload_chat_image_api_v1_companions__companion_id__conversations__conversation_id__images_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_chat_image_api_v1_companions__companion_id__conversations__conversation_id__images_post"
+      },
+      "ClientSessionCreate": {
+        "properties": {
+          "companionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Companionid",
+            "description": "ID of the companion to use",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "conversationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversationid",
+            "description": "(Optional) Existing conversation ID to continue"
+          },
+          "externalUserId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Externaluserid",
+            "description": "(Optional) Stable end-user identifier for tracking"
+          },
+          "voiceConfig": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__routers__sessions__VoiceConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "(Optional) Voice pipeline configuration. Defaults to OpenAI Realtime with 'alloy' voice."
+          }
+        },
+        "type": "object",
+        "required": [
+          "companionId"
+        ],
+        "title": "ClientSessionCreate",
+        "description": "Request model for creating a voice session via API key authentication."
+      },
+      "app__routers__sessions__VoiceConfig": {
+        "properties": {
+          "pipeline_type": {
+            "$ref": "#/components/schemas/PipelineType",
+            "description": "Pipeline type: 'openai-realtime' (default) or 'stt-llm-tts'",
+            "default": "openai-realtime"
+          },
+          "voice_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice Name",
+            "description": "Voice name. OpenAI: alloy, ash, ballad, coral, echo, sage, shimmer, verse. ElevenLabs: Sarah, George, etc. Cartesia: Sophie, Savannah, etc.",
+            "default": "alloy"
+          },
+          "openai_voice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Openai Voice",
+            "description": "[Legacy] OpenAI voice ID. Use voice_name instead."
+          },
+          "realtimeModel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realtimemodel",
+            "description": "OpenAI Realtime model. Default: gpt-4o-realtime-preview-2025-06-03"
+          },
+          "stt_provider": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/STTProvider"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "[Required for stt-llm-tts] Speech-to-text provider: openai, deepgram, ultravox, cartesia"
+          },
+          "llm_provider": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMProvider"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "[Required for stt-llm-tts] LLM provider: openai-gpt4o, openai-gpt4o-mini, claude-sonnet-4, etc."
+          },
+          "tts_provider": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TTSProvider"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "[Required for stt-llm-tts] Text-to-speech provider: openai, elevenlabs, cartesia"
+          },
+          "tts_voice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tts Voice Id",
+            "description": "[Auto-mapped] TTS voice ID. Usually auto-derived from voice_name + tts_provider."
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "description": "LLM temperature (0.0-2.0). Default: 0.7",
+            "default": 0.7
+          }
+        },
+        "type": "object",
+        "title": "VoiceConfig",
+        "description": "Voice pipeline configuration for real-time voice sessions."
+      },
+      "TTSProvider": {
+        "type": "string",
+        "enum": [
+          "openai",
+          "elevenlabs",
+          "cartesia"
+        ],
+        "title": "TTSProvider"
+      },
+      "PipelineType": {
+        "type": "string",
+        "enum": [
+          "openai-realtime",
+          "stt-llm-tts"
+        ],
+        "title": "PipelineType"
+      },
+      "LLMProvider": {
+        "type": "string",
+        "enum": [
+          "openai-gpt4o",
+          "openai-gpt4o-mini",
+          "openai-gpt5.1",
+          "claude-sonnet-3.7",
+          "claude-sonnet-3.5",
+          "claude-sonnet-4",
+          "claude-sonnet-4.5",
+          "gemini",
+          "gemini-2.5-flash",
+          "local-vllm-qwen",
+          "moonshot-kimi-k2"
+        ],
+        "title": "LLMProvider"
+      },
+      "STTProvider": {
+        "type": "string",
+        "enum": [
+          "openai",
+          "ultravox",
+          "cartesia",
+          "deepgram"
+        ],
+        "title": "STTProvider"
+      },
+      "CompanionResource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "config": {
+            "$ref": "#/components/schemas/CompanionConfig-Output"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "config",
+          "created_at",
+          "project_id"
+        ],
+        "title": "CompanionResource"
+      },
+      "CompanionConfig-Output": {
+        "properties": {
+          "system_prompt": {
+            "$ref": "#/components/schemas/SystemPrompt"
+          },
+          "memory": {
+            "$ref": "#/components/schemas/MemoryConfig"
+          },
+          "voice": {
+            "$ref": "#/components/schemas/VoiceConfig-Output"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Output Tokens",
+            "description": "Optional cap for LLM completion tokens; defaults to server constant when unset"
+          }
+        },
+        "type": "object",
+        "title": "CompanionConfig"
+      },
+      "MemoryConfig": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "core_memories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Core Memories"
+          },
+          "memory_evaluation_prompt": {
+            "type": "string",
+            "title": "Memory Evaluation Prompt",
+            "default": ""
+          },
+          "recency": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Recency",
+            "default": 0.995
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 50
+          },
+          "min_saliency": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Saliency",
+            "default": 0.2
+          }
+        },
+        "type": "object",
+        "title": "MemoryConfig"
+      },
+      "VoiceConfig-Output": {
+        "properties": {
+          "popular_options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Popular Options"
+          },
+          "build_your_own": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Build Your Own"
+          },
+          "voice": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Voice"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "default": 0.25
+          }
+        },
+        "type": "object",
+        "title": "VoiceConfig"
+      },
+      "SystemPrompt": {
+        "properties": {
+          "full_system_prompt": {
+            "type": "string",
+            "title": "Full System Prompt",
+            "description": "Complete system prompt",
+            "default": ""
+          },
+          "identity": {
+            "type": "string",
+            "title": "Identity",
+            "description": "Character identity",
+            "default": ""
+          },
+          "personality": {
+            "type": "string",
+            "title": "Personality",
+            "description": "Character personality",
+            "default": ""
+          },
+          "style": {
+            "type": "string",
+            "title": "Style",
+            "description": "Communication style",
+            "default": ""
+          },
+          "backstory": {
+            "type": "string",
+            "title": "Backstory",
+            "description": "Character backstory",
+            "default": ""
+          },
+          "additional_instructions": {
+            "type": "string",
+            "title": "Additional Instructions",
+            "description": "Additional instructions",
+            "default": ""
+          },
+          "self_image": {
+            "type": "string",
+            "title": "Self Image",
+            "description": "Character self-image",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SystemPrompt"
+      },
+      "KnowledgeIngestionRequest": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Payload type: text | markdown | json"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content",
+            "description": "Inline content for ingestion"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key",
+            "description": "Reference key for pre-uploaded asset"
+          },
+          "asset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Id",
+            "description": "Previously uploaded asset identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "KnowledgeIngestionRequest"
+      },
+      "ProfileSchemaResponse": {
+        "properties": {
+          "companion_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Companion Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "schema": {
+            "type": "object",
+            "title": "Schema"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "companion_id",
+          "project_id",
+          "updated_at"
+        ],
+        "title": "ProfileSchemaResponse"
+      },
+      "CompanionCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompanionConfig-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CompanionCreateRequest"
+      },
+      "CompanionConfig-Input": {
+        "properties": {
+          "system_prompt": {
+            "$ref": "#/components/schemas/SystemPrompt"
+          },
+          "memory": {
+            "$ref": "#/components/schemas/MemoryConfig"
+          },
+          "voice": {
+            "$ref": "#/components/schemas/app__models__companion__VoiceConfig"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Output Tokens",
+            "description": "Optional cap for LLM completion tokens; defaults to server constant when unset"
+          }
+        },
+        "type": "object",
+        "title": "CompanionConfig"
+      },
+      "app__models__companion__VoiceConfig": {
+        "properties": {
+          "popular_options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Popular Options"
+          },
+          "build_your_own": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Build Your Own"
+          },
+          "voice": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Voice"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "default": 0.25
+          }
+        },
+        "type": "object",
+        "title": "VoiceConfig"
+      },
+      "app__routers__client_api__ConversationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "companion_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Companion Id"
+          },
+          "external_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External User Id"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationMessage"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "companion_id",
+          "external_user_id",
+          "started_at",
+          "messages"
+        ],
+        "title": "ConversationResponse"
+      },
+      "ConversationMessage": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "content",
+          "created_at"
+        ],
+        "title": "ConversationMessage"
+      },
+      "KnowledgeAssetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "companion_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Companion Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "metadata": {
+            "type": "object",
+            "title": "Metadata"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "companion_id",
+          "filename",
+          "mime_type",
+          "size_bytes",
+          "status",
+          "metadata",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "KnowledgeAssetResponse"
+      },
+      "ChatRequest": {
+        "properties": {
+          "external_user_id": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "External User Id"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Message"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "default": "openai-gpt4o-mini"
+          },
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature",
+            "default": 0.7
+          },
+          "image_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Ids",
+            "description": "IDs of uploaded images to include"
+          }
+        },
+        "type": "object",
+        "required": [
+          "external_user_id",
+          "message"
+        ],
+        "title": "ChatRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ProfileSchemaRequest": {
+        "properties": {
+          "schema": {
+            "type": "object",
+            "title": "Schema"
+          }
+        },
+        "type": "object",
+        "title": "ProfileSchemaRequest"
+      },
+      "CompanionUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompanionConfig-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "CompanionUpdateRequest"
+      },
+      "KnowledgeSearchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Query"
+          },
+          "max_results": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Results",
+            "default": 5
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filters"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "semantic",
+              "keyword",
+              "hybrid"
+            ],
+            "title": "Mode",
+            "description": "Search strategy: semantic, keyword, or hybrid (default).",
+            "default": "hybrid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "KnowledgeSearchRequest"
+      },
+      "ChatImageResponse": {
+        "properties": {
+          "image_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Image Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "storage_url": {
+            "type": "string",
+            "title": "Storage Url"
+          },
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          }
+        },
+        "type": "object",
+        "required": [
+          "image_id",
+          "description",
+          "storage_url",
+          "mime_type"
+        ],
+        "title": "ChatImageResponse",
+        "description": "Response model for image upload endpoint."
+      },
+      "KnowledgeSearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeSearchResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "KnowledgeSearchResponse"
+      },
+      "KnowledgeSearchResult": {
+        "properties": {
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "attributes": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "KnowledgeSearchResult"
+      },
+      "CompanionListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "last_updated": {
+            "type": "string",
+            "title": "Last Updated"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "last_updated",
+          "project_id"
+        ],
+        "title": "CompanionListItem"
+      },
+      "Body_upload_knowledge_asset_v1_companions__companion_id__knowledge_assets_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_knowledge_asset_v1_companions__companion_id__knowledge_assets_post"
+      },
+      "ConversationListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "companion_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Companion Id"
+          },
+          "external_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External User Id"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "last_message_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Message At"
+          },
+          "message_count": {
+            "type": "integer",
+            "title": "Message Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "companion_id",
+          "external_user_id",
+          "started_at"
+        ],
+        "title": "ConversationListItem"
+      },
+      "KnowledgeJobResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "metadata": {
+            "type": "object",
+            "title": "Metadata"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "metadata",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "KnowledgeJobResponse"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key (e.g., em_live_xxx or emk_prod_xxx)"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}

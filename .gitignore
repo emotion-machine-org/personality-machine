@@ -1,0 +1,46 @@
+.DS_Store
+
+# Environment files (never commit real credentials)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+server/lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Keep local docs out of version control
+docs/
+
+.claude/
+.codex/
+.uv-cache/
+.ruff_cache/
+
+customers/
+overnight/
+
+.idea
+
+node_modules/
+
+*mitm_mcp_traffic.db
+*pnpm-lock.yaml

@@ -1,0 +1,56 @@
+# Install: brew install pre-commit
+# Setup: pre-commit install/run
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: \.md$
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [ --unsafe ]  # Allow custom YAML tags
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [ --maxkb=1000 ]
+      - id: mixed-line-ending
+        args: [ --fix=lf ]
+
+  # Python/Server: Ruff formatter and linter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Run the Ruff formatter
+      - id: ruff-format
+        name: ruff format (server)
+        files: ^server/
+        types_or: [ python, pyi ]
+      # Run the Ruff linter
+      - id: ruff
+        name: ruff lint (server)
+        files: ^server/
+        types_or: [ python, pyi ]
+        args: [ --fix, --exit-non-zero-on-fix ]
+
+  # TypeScript/JavaScript: ESLint for web
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint (web)
+        entry: bash -c 'cd web && npx eslint --fix --max-warnings=0 --ignore-pattern ".next/**" --ignore-pattern "node_modules/**" --ignore-pattern "out/**" --ignore-pattern "build/**" "${@#web/}"' --
+        language: system
+        files: ^web/src/.*\.(js|jsx|ts|tsx|mjs|cjs)$
+        pass_filenames: true
+        require_serial: false
+
+#     Optional: Python type checking with mypy (disabled for future use)
+#     - repo: https://github.com/pre-commit/mirrors-mypy
+#       rev: v1.11.2
+#       hooks:
+#         - id: mypy
+#           name: mypy (server)
+#           files: ^server/
+#           additional_dependencies: [types-all]

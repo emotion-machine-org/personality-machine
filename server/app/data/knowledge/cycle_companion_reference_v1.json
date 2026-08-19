@@ -1,0 +1,31 @@
+{
+  "note": "Synthetic example data for demonstrating knowledge fixtures. Not derived from research or user data.",
+  "legend": {
+    "Menstruation": "D1–D5",
+    "Follicular Phase": "D6–D12",
+    "Ovulation": "D13–D16",
+    "Luteal (Start)": "D17–D19",
+    "Luteal (Mid)": "D20–D24",
+    "Luteal (End)": "D25–D28"
+  },
+  "rows": [
+    {
+      "category": "Energy",
+      "symptom": "Fatigue",
+      "factors": ["Menstruation", "Poor Sleep", "High Stress"],
+      "prevalence": "~50% (synthetic example value)"
+    },
+    {
+      "category": "Pain",
+      "symptom": "Cramps",
+      "factors": ["Menstruation", "Dehydration", "Inactivity"],
+      "prevalence": "~60% (synthetic example value)"
+    },
+    {
+      "category": "Appetite",
+      "symptom": "Food Cravings",
+      "factors": ["Luteal Phase", "Stress", "Irregular Meals"],
+      "prevalence": "~45% (synthetic example value)"
+    }
+  ]
+}

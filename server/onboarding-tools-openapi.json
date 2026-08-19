@@ -1,0 +1,90 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Onboarding Tools",
+    "description": "Tools for the onboarding companion to create companions from conversation",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "{api_base_url}",
+      "description": "Emotion Machine API",
+      "variables": {
+        "api_base_url": {
+          "default": "http://localhost:8100"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/api/internal/onboarding/create-companion-from-answers": {
+      "post": {
+        "operationId": "create_companion_from_answers",
+        "summary": "Create a companion based on the conversation",
+        "description": "Call this when you understand what kind of companion the user wants. Summarize their vision into a rich description.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Companion created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateCompanionRequest": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "A rich description of the companion based on the conversation. Capture what the user wants: the role, personality, interests, communication style, and any specific traits they mentioned. Be specific and vivid. This becomes the companion's identity."
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Optional name for the companion. If not provided, one will be generated."
+          },
+          "vibe": {
+            "type": "string",
+            "enum": ["chill", "energetic", "warm", "witty", "intense"],
+            "description": "Optional overall vibe. Only include if clearly expressed by user."
+          }
+        }
+      },
+      "CompanionResponse": {
+        "type": "object",
+        "properties": {
+          "companion_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companion_name": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

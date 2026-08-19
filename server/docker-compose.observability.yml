@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4318:4318"     # OTLP HTTP receiver (used by default)
+      - "4317:4317"     # OTLP gRPC receiver (optional)
+    restart: unless-stopped
+
+# Usage:
+#   docker compose -f docker-compose.observability.yml up -d
+#
+# Access Jaeger UI at: http://localhost:16686
+# OTLP HTTP endpoint: http://localhost:4318
+#
+# To stop:
+#   docker compose -f docker-compose.observability.yml down
