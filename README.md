@@ -92,4 +92,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development conventions and [SECURITY
 
 ## License
 
-[Apache-2.0](LICENSE) © Emotion Machine
+[MIT](LICENSE) © Emotion Machine

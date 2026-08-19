@@ -9,7 +9,7 @@ description = "SDK for building AI companions with persistent relationships"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Emotion Machine" }]
-license = { text = "Apache-2.0" }
+license = { text = "MIT" }
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",

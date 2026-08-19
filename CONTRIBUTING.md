@@ -33,4 +33,4 @@ The tier assignment lives in `server/tests/conftest.py`. Web tests: `cd web && n
 
 ## Licensing
 
-By contributing, you agree that your contributions are licensed under the [Apache License 2.0](LICENSE) (inbound = outbound). No CLA required.
+By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE) (inbound = outbound). No CLA required.
